@@ -101,6 +101,7 @@ What Cloudflare does **not** do: it can't cache or limit the server→Google geo
 
 ## Changelog
 
+- **1.8.0** — Visual usage-meter with progress bars on the settings page; API keys masked with a show/hide toggle; cost-control fields tucked into a collapsed "Advanced" accordion; removed the now-redundant default-center lat/lng setting (the map always auto-fits to your stores); clicking a marker now pans it into view so the popup can't run off-screen; map height is capped to fit the viewport; lightweight built-in marker clustering for dense areas (numbered bubbles, no external library).
 - **1.7.0** — Auto-import a store photo from Google (once, into the media library); refined info-window design (site font, matching buttons with white icons, polished hours); mouse-wheel zoom without Ctrl; ZIP search recenters/zooms with client-side geocode fallback; default view fits all stores.
 - **1.6.0** — Store name auto-fills from Google (hidden WP title field); About pulls from the Google editorial summary; phone/hours/about visibility default ON for new stores; Save/Publish button at the bottom of the store form.
 - **1.5.0** — Optional per-store logo (media upload); mobile layout (search above the map on phones); version now bumps per feature.

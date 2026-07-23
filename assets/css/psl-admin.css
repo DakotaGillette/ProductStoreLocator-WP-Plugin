@@ -245,6 +245,125 @@ textarea.psl-input {
 	padding: 0 12px;
 }
 
+/* Settings: usage meter ------------------------------------------------ */
+.psl-usage {
+	background: #fff;
+	border: 1px solid var(--psl-border);
+	border-radius: var(--psl-radius);
+}
+
+.psl-usage__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-bottom: 14px;
+}
+
+.psl-usage__month {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--psl-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.psl-meter {
+	margin: 0 0 16px;
+}
+
+.psl-meter:last-of-type {
+	margin-bottom: 0;
+}
+
+.psl-meter__row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-bottom: 6px;
+	font-size: 13px;
+}
+
+.psl-meter__label {
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.psl-meter__value {
+	color: var(--psl-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.psl-meter__unlimited {
+	font-style: italic;
+}
+
+.psl-meter__track {
+	height: 10px;
+	border-radius: 999px;
+	background: #eef0f2;
+	overflow: hidden;
+}
+
+.psl-meter__fill {
+	height: 100%;
+	border-radius: 999px;
+	transition: width 0.3s ease;
+}
+
+.psl-meter__fill--ok {
+	background: #2fa84f;
+}
+
+.psl-meter__fill--warn {
+	background: #e0a02c;
+}
+
+.psl-meter__fill--danger {
+	background: #d9433f;
+}
+
+/* Settings: collapsed accordion for advanced cost controls ------------- */
+.psl-accordion {
+	max-width: 820px;
+	margin: 20px 0;
+	border: 1px solid var(--psl-border);
+	border-radius: var(--psl-radius);
+	background: #fff;
+}
+
+.psl-accordion > summary {
+	cursor: pointer;
+	list-style: revert;
+	padding: 14px 18px;
+	font-weight: 600;
+	font-size: 14px;
+	color: #1d2327;
+}
+
+.psl-accordion > summary:hover {
+	color: var(--psl-accent);
+}
+
+.psl-accordion__body {
+	padding: 0 18px 6px;
+	border-top: 1px solid var(--psl-border);
+}
+
+.psl-accordion[open] > summary {
+	border-bottom: 1px solid transparent;
+}
+
+/* Settings: masked API key field with show/hide ------------------------ */
+.psl-key-field {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.psl-key-field input {
+	font-family: monospace;
+}
+
 /* Logo picker -------------------------------------------------------- */
 .psl-logo-picker {
 	display: flex;

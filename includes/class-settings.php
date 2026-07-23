@@ -33,6 +33,14 @@ final class Settings {
 	private const PAGE = 'store-locator-settings';
 
 	/**
+	 * Hook suffix of the Settings page, captured in add_menu() and used to
+	 * scope asset enqueuing to just this screen.
+	 *
+	 * @var string
+	 */
+	private string $hook_suffix = '';
+
+	/**
 	 * Register hooks.
 	 *
 	 * @return void
@@ -40,7 +48,26 @@ final class Settings {
 	public function hooks(): void {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_filter( 'plugin_action_links_' . PSL_PLUGIN_BASENAME, array( $this, 'action_links' ) );
+	}
+
+	/**
+	 * Enqueue the shared admin stylesheet on the Settings page only.
+	 *
+	 * @param string $hook Current admin page hook.
+	 * @return void
+	 */
+	public function enqueue_assets( string $hook ): void {
+		if ( $hook !== $this->hook_suffix ) {
+			return;
+		}
+		wp_enqueue_style(
+			'psl-admin',
+			PSL_PLUGIN_URL . 'assets/css/psl-admin.css',
+			array(),
+			Plugin::asset_version( 'assets/css/psl-admin.css' )
+		);
 	}
 
 	/**
@@ -79,8 +106,6 @@ final class Settings {
 	public static function defaults(): array {
 		return array(
 			'psl_maps_api_key'       => '',
-			'psl_default_center_lat' => 39.8283,
-			'psl_default_center_lng' => -98.5795,
 			'psl_default_zoom'       => 4,
 			'psl_map_type'           => 'roadmap',
 			'psl_map_style'          => 'default',
@@ -127,7 +152,7 @@ final class Settings {
 	 * @return void
 	 */
 	public function add_menu(): void {
-		add_submenu_page(
+		$this->hook_suffix = (string) add_submenu_page(
 			CPT::MENU_SLUG,
 			__( 'Store Locator Settings', 'product-store-locator' ),
 			__( 'Settings', 'product-store-locator' ),
@@ -163,12 +188,11 @@ final class Settings {
 		add_settings_field(
 			'psl_maps_api_key',
 			__( 'Google Maps API Key', 'product-store-locator' ),
-			array( $this, 'field_text' ),
+			array( $this, 'field_api_key' ),
 			self::PAGE,
 			'psl_section_api',
 			array(
 				'key'         => 'psl_maps_api_key',
-				'class'       => 'regular-text',
 				'description' => __( 'Your Google Maps JavaScript API key. It is used on the frontend with libraries=places.', 'product-store-locator' ),
 			)
 		);
@@ -181,40 +205,17 @@ final class Settings {
 		);
 
 		add_settings_field(
-			'psl_default_center_lat',
-			__( 'Default Center Latitude', 'product-store-locator' ),
-			array( $this, 'field_number' ),
-			self::PAGE,
-			'psl_section_map',
-			array(
-				'key'  => 'psl_default_center_lat',
-				'step' => 'any',
-			)
-		);
-
-		add_settings_field(
-			'psl_default_center_lng',
-			__( 'Default Center Longitude', 'product-store-locator' ),
-			array( $this, 'field_number' ),
-			self::PAGE,
-			'psl_section_map',
-			array(
-				'key'  => 'psl_default_center_lng',
-				'step' => 'any',
-			)
-		);
-
-		add_settings_field(
 			'psl_default_zoom',
-			__( 'Default Zoom', 'product-store-locator' ),
+			__( 'Empty-Map Zoom', 'product-store-locator' ),
 			array( $this, 'field_number' ),
 			self::PAGE,
 			'psl_section_map',
 			array(
-				'key'  => 'psl_default_zoom',
-				'min'  => '0',
-				'max'  => '21',
-				'step' => '1',
+				'key'         => 'psl_default_zoom',
+				'min'         => '0',
+				'max'         => '21',
+				'step'        => '1',
+				'description' => __( 'Zoom level used only if you have zero published stores. Once you have stores, the map always auto-fits to show every marker.', 'product-store-locator' ),
 			)
 		);
 
@@ -300,7 +301,7 @@ final class Settings {
 		add_settings_field(
 			'psl_geocode_server_key',
 			__( 'Geocoding API Key (server-side)', 'product-store-locator' ),
-			array( $this, 'field_text' ),
+			array( $this, 'field_api_key' ),
 			self::PAGE,
 			'psl_section_limits',
 			array(
@@ -370,29 +371,10 @@ final class Settings {
 	 * @return void
 	 */
 	public function section_limits_intro(): void {
-		$usage = ApiGuard::usage_snapshot();
-
 		echo '<p>' . esc_html__(
-			'These limits protect you from unexpected Google charges. ZIP/postcode geocoding runs on the server so results are cached and rate limited. Map loads happen in the browser and are capped below. Set the caps at or under your Google free allotment.',
+			'These settings protect you from unexpected Google charges. Most sites never need to touch them — the usage meter above already shows how you\'re tracking. ZIP/postcode geocoding runs on the server so results are cached and rate limited; map loads happen in the browser and are capped below. Set the caps at or under your Google free allotment.',
 			'product-store-locator'
 		) . '</p>';
-
-		echo '<p><strong>' . esc_html__( 'This month so far', 'product-store-locator' ) . ':</strong> ';
-		printf(
-			/* translators: 1: month, 2: map loads, 3: geocoding calls. */
-			esc_html__( '%1$s — %2$d map loads, %3$d geocoding calls.', 'product-store-locator' ),
-			esc_html( $usage['month'] ),
-			(int) $usage['maploads'],
-			(int) $usage['geocode']
-		);
-		echo '</p>';
-
-		$reset_url = wp_nonce_url(
-			admin_url( 'admin-post.php?action=psl_reset_usage' ),
-			'psl_reset_usage'
-		);
-		echo '<p><a href="' . esc_url( $reset_url ) . '" class="button button-secondary">' .
-			esc_html__( 'Reset usage counters', 'product-store-locator' ) . '</a></p>';
 	}
 
 	/**
@@ -428,6 +410,27 @@ final class Settings {
 			esc_attr( $key ),
 			esc_attr( self::OPTION_KEY ),
 			esc_attr( (string) $value )
+		);
+
+		$this->description( $args );
+	}
+
+	/**
+	 * Render a masked (password-style) field with a show/hide toggle, for keys.
+	 *
+	 * @param array<string, mixed> $args Field args.
+	 * @return void
+	 */
+	public function field_api_key( array $args ): void {
+		$key   = $args['key'];
+		$value = self::get( $key );
+
+		printf(
+			'<div class="psl-key-field"><input type="password" class="regular-text" id="%1$s" name="%2$s[%1$s]" value="%3$s" autocomplete="off" /> <button type="button" class="button psl-key-toggle" data-target="%1$s">%4$s</button></div>',
+			esc_attr( $key ),
+			esc_attr( self::OPTION_KEY ),
+			esc_attr( (string) $value ),
+			esc_html__( 'Show', 'product-store-locator' )
 		);
 
 		$this->description( $args );
@@ -564,8 +567,6 @@ final class Settings {
 		$clean    = array();
 
 		$clean['psl_maps_api_key']         = isset( $input['psl_maps_api_key'] ) ? sanitize_text_field( $input['psl_maps_api_key'] ) : '';
-		$clean['psl_default_center_lat']   = isset( $input['psl_default_center_lat'] ) ? (float) $input['psl_default_center_lat'] : $defaults['psl_default_center_lat'];
-		$clean['psl_default_center_lng']   = isset( $input['psl_default_center_lng'] ) ? (float) $input['psl_default_center_lng'] : $defaults['psl_default_center_lng'];
 		$clean['psl_default_zoom']         = isset( $input['psl_default_zoom'] ) ? max( 0, min( 21, (int) $input['psl_default_zoom'] ) ) : $defaults['psl_default_zoom'];
 
 		$allowed_types = array( 'roadmap', 'satellite', 'hybrid', 'terrain' );
@@ -659,6 +660,119 @@ final class Settings {
 	}
 
 	/**
+	 * Render the "Usage this month" card with visual progress meters.
+	 *
+	 * Always visible (not tucked in the accordion) so cost tracking is the
+	 * first thing an admin sees, even if they never touch the advanced caps.
+	 *
+	 * @return void
+	 */
+	private function render_usage_meter(): void {
+		$usage   = ApiGuard::usage_snapshot();
+		$map_cap = (int) self::get( 'psl_map_monthly_cap' );
+		$geo_cap = (int) self::get( 'psl_geocode_monthly_cap' );
+
+		$reset_url = wp_nonce_url(
+			admin_url( 'admin-post.php?action=psl_reset_usage' ),
+			'psl_reset_usage'
+		);
+		?>
+		<div class="psl-usage card" style="max-width:820px;padding:16px 20px;margin:16px 0;">
+			<div class="psl-usage__head">
+				<h2 style="margin:0;"><?php esc_html_e( 'Google API usage this month', 'product-store-locator' ); ?></h2>
+				<span class="psl-usage__month"><?php echo esc_html( $usage['month'] ); ?></span>
+			</div>
+
+			<?php
+			$this->render_meter_bar( __( 'Map loads', 'product-store-locator' ), (int) $usage['maploads'], $map_cap );
+			$this->render_meter_bar( __( 'Geocoding calls', 'product-store-locator' ), (int) $usage['geocode'], $geo_cap );
+			?>
+
+			<p style="margin:14px 0 0;">
+				<a href="<?php echo esc_url( $reset_url ); ?>" class="button button-secondary">
+					<?php esc_html_e( 'Reset usage counters', 'product-store-locator' ); ?>
+				</a>
+				<span class="description" style="margin-left:8px;">
+					<?php esc_html_e( 'Adjust the caps under "Advanced: Usage & Cost Controls" below.', 'product-store-locator' ); ?>
+				</span>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render a single labeled progress bar for the usage meter.
+	 *
+	 * @param string $label Human-readable label.
+	 * @param int    $used  Count used so far this month.
+	 * @param int    $cap   Configured monthly cap (0 = unlimited).
+	 * @return void
+	 */
+	private function render_meter_bar( string $label, int $used, int $cap ): void {
+		$unlimited = $cap <= 0;
+		$pct       = $unlimited ? 0 : (int) min( 100, round( ( $used / max( 1, $cap ) ) * 100 ) );
+		$state     = $pct >= 90 ? 'danger' : ( $pct >= 70 ? 'warn' : 'ok' );
+		$bar_width = $unlimited ? 6 : max( 2, $pct );
+		?>
+		<div class="psl-meter">
+			<div class="psl-meter__row">
+				<span class="psl-meter__label"><?php echo esc_html( $label ); ?></span>
+				<span class="psl-meter__value">
+					<?php if ( $unlimited ) : ?>
+						<?php echo esc_html( number_format_i18n( $used ) ); ?>
+						<span class="psl-meter__unlimited"><?php esc_html_e( '(unlimited)', 'product-store-locator' ); ?></span>
+					<?php else : ?>
+						<?php
+						printf(
+							/* translators: 1: calls used, 2: monthly cap. */
+							esc_html__( '%1$s / %2$s', 'product-store-locator' ),
+							esc_html( number_format_i18n( $used ) ),
+							esc_html( number_format_i18n( $cap ) )
+						);
+						?>
+					<?php endif; ?>
+				</span>
+			</div>
+			<div class="psl-meter__track">
+				<div
+					class="psl-meter__fill psl-meter__fill--<?php echo esc_attr( $unlimited ? 'ok' : $state ); ?>"
+					style="width:<?php echo esc_attr( (string) $bar_width ); ?>%;"
+				></div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render one registered settings section (title, callback, fields) inside
+	 * its own form-table. Used instead of do_settings_sections() so the
+	 * "Usage & Cost Controls" section can be wrapped in a collapsed accordion.
+	 *
+	 * @param string $section_id Section ID passed to add_settings_section().
+	 * @return void
+	 */
+	private function render_section( string $section_id ): void {
+		global $wp_settings_sections;
+
+		if ( empty( $wp_settings_sections[ self::PAGE ][ $section_id ] ) ) {
+			return;
+		}
+
+		$section = $wp_settings_sections[ self::PAGE ][ $section_id ];
+
+		if ( $section['title'] ) {
+			echo '<h2>' . esc_html( $section['title'] ) . '</h2>';
+		}
+		if ( $section['callback'] ) {
+			call_user_func( $section['callback'], $section );
+		}
+
+		echo '<table class="form-table" role="presentation">';
+		do_settings_fields( self::PAGE, $section_id );
+		echo '</table>';
+	}
+
+	/**
 	 * Render the settings page.
 	 *
 	 * @return void
@@ -678,15 +792,40 @@ final class Settings {
 			<?php endif; ?>
 
 			<?php $this->render_embed_box(); ?>
+			<?php $this->render_usage_meter(); ?>
 
 			<form action="options.php" method="post">
 				<?php
 				settings_fields( self::GROUP );
-				do_settings_sections( self::PAGE );
-				submit_button();
+				$this->render_section( 'psl_section_api' );
+				$this->render_section( 'psl_section_map' );
 				?>
+				<details class="psl-accordion">
+					<summary><?php esc_html_e( 'Advanced: Usage & Cost Controls', 'product-store-locator' ); ?></summary>
+					<div class="psl-accordion__body">
+						<?php $this->render_section( 'psl_section_limits' ); ?>
+					</div>
+				</details>
+				<?php submit_button(); ?>
 			</form>
 		</div>
+		<script>
+		document.addEventListener( 'click', function ( e ) {
+			var btn = e.target.closest && e.target.closest( '.psl-key-toggle' );
+			if ( ! btn ) {
+				return;
+			}
+			var input = document.getElementById( btn.getAttribute( 'data-target' ) );
+			if ( ! input ) {
+				return;
+			}
+			var showing = input.type === 'text';
+			input.type = showing ? 'password' : 'text';
+			btn.textContent = showing
+				? '<?php echo esc_js( __( 'Show', 'product-store-locator' ) ); ?>'
+				: '<?php echo esc_js( __( 'Hide', 'product-store-locator' ) ); ?>';
+		} );
+		</script>
 		<?php
 	}
 }

@@ -113,9 +113,11 @@ final class Shortcode {
 		wp_enqueue_style( 'psl-frontend' );
 
 		$config = array(
+			// Only used when there are zero published stores; otherwise the
+			// map always auto-fits to the actual store markers.
 			'defaultCenter'  => array(
-				'lat' => (float) Settings::get( 'psl_default_center_lat' ),
-				'lng' => (float) Settings::get( 'psl_default_center_lng' ),
+				'lat' => 39.8283,
+				'lng' => -98.5795,
 			),
 			'defaultZoom'    => (int) Settings::get( 'psl_default_zoom' ),
 			'searchZoom'     => 12,

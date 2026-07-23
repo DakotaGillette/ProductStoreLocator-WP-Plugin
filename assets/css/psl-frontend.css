@@ -28,11 +28,21 @@
 .psl-map-area {
 	position: relative;
 	width: 100%;
-	height: var(--psl-map-height);
+	/* Never taller than the configured height, but also never taller than
+	   the visible viewport (minus a little breathing room for page chrome),
+	   so the map always fits on screen without forcing extra page scroll. */
+	height: min( var(--psl-map-height), calc( 100svh - 140px ) );
 	min-height: 320px;
 	border-radius: var(--psl-radius);
 	overflow: hidden;
 	border: 1px solid var(--psl-border);
+}
+
+/* Fallback for browsers without svh support (falls back to vh). */
+@supports not ( height: 1svh ) {
+	.psl-map-area {
+		height: min( var(--psl-map-height), calc( 100vh - 140px ) );
+	}
 }
 
 .psl-map {

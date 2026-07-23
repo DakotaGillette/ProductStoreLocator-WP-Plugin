@@ -14,7 +14,10 @@
 	var map = null;
 	var geocoder = null;
 	var infoWindow = null;
-	var markers = [];
+	var markers = [];       // One google.maps.Marker per store, always created.
+	var clusterMarkers = []; // Synthetic "N stores" bubble markers, rebuilt on each idle.
+	var clusterOverlay = null; // Invisible OverlayView, used only to get pixel projection.
+	var openMarker = null;  // Marker currently anchoring the open info window.
 	var searchBusy = false;
 
 	/**
@@ -79,7 +82,8 @@
 		var safe = /^#[0-9a-fA-F]{3,8}$/.test( color ) ? color : '#d9433f';
 		var svg =
 			'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">' +
-			'<path d="M16 0C7.2 0 0 7.1 0 15.9 0 27 16 42 16 42s16-15 16-26.1C32 7.1 24.8 0 16 0z" fill="' + safe + '"/>' +
+			'<path d="M16 0C7.2 0 0 7.1 0 15.9 0 27 16 42 16 42s16-15 16-26.1C32 7.1 24.8 0 16 0z" ' +
+			'fill="' + safe + '" stroke="rgba(0,0,0,0.35)" stroke-width="1.25"/>' +
 			'<circle cx="16" cy="16" r="6" fill="#ffffff"/>' +
 			'</svg>';
 
@@ -88,6 +92,44 @@
 			scaledSize: new google.maps.Size( 32, 42 ),
 			anchor: new google.maps.Point( 16, 42 )
 		};
+	}
+
+	/**
+	 * Build a circular "N stores" cluster bubble icon as a data URI.
+	 *
+	 * @param {string} color Hex accent color.
+	 * @param {number} size  Diameter in pixels.
+	 * @return {Object} Google Maps icon definition.
+	 */
+	function clusterIcon( color, size ) {
+		var safe = /^#[0-9a-fA-F]{3,8}$/.test( color ) ? color : '#d9433f';
+		var r = size / 2;
+		var svg =
+			'<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
+			'<circle cx="' + r + '" cy="' + r + '" r="' + ( r - 2 ) + '" fill="' + safe + '" stroke="#ffffff" stroke-width="3"/>' +
+			'</svg>';
+
+		return {
+			url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent( svg ),
+			scaledSize: new google.maps.Size( size, size ),
+			anchor: new google.maps.Point( r, r )
+		};
+	}
+
+	/**
+	 * Pick a cluster bubble diameter based on how many stores it contains.
+	 *
+	 * @param {number} count Number of stores in the cluster.
+	 * @return {number} Diameter in pixels.
+	 */
+	function clusterSize( count ) {
+		if ( count >= 50 ) {
+			return 60;
+		}
+		if ( count >= 10 ) {
+			return 50;
+		}
+		return 42;
 	}
 
 	/**
@@ -452,6 +494,21 @@
 	}
 
 	/**
+	 * Open a store's info window, first panning so it has room to appear
+	 * fully on screen regardless of where the marker sits in the viewport.
+	 *
+	 * @param {Object}              store  Store record.
+	 * @param {google.maps.Marker}  marker Marker being opened.
+	 * @return {void}
+	 */
+	function openStore( store, marker ) {
+		openMarker = marker;
+		map.panTo( marker.getPosition() );
+		infoWindow.setContent( buildInfoWindow( store ) );
+		infoWindow.open( { anchor: marker, map: map } );
+	}
+
+	/**
 	 * Create markers for all stores and fit the map to their bounds.
 	 *
 	 * @return {void}
@@ -475,8 +532,7 @@
 			} );
 
 			marker.addListener( 'click', function () {
-				infoWindow.setContent( buildInfoWindow( store ) );
-				infoWindow.open( { anchor: marker, map: map } );
+				openStore( store, marker );
 			} );
 
 			markers.push( marker );
@@ -495,6 +551,128 @@
 		} else if ( markers.length === 1 ) {
 			map.setCenter( bounds.getCenter() );
 			map.setZoom( 14 );
+		}
+
+		setupClustering();
+	}
+
+	/**
+	 * Set up lightweight, dependency-free marker clustering: nearby markers
+	 * (within ~55px on screen) collapse into a single numbered bubble that
+	 * expands as the map is zoomed in, splitting apart naturally.
+	 *
+	 * @return {void}
+	 */
+	function setupClustering() {
+		if ( markers.length < 2 || typeof google.maps.OverlayView === 'undefined' ) {
+			return;
+		}
+
+		// A projection is only available once an OverlayView has been added
+		// to the map, so we create an invisible one purely to read pixel
+		// coordinates from geographic ones.
+		function ClusterProjectionOverlay() {}
+		ClusterProjectionOverlay.prototype = Object.create( google.maps.OverlayView.prototype );
+		ClusterProjectionOverlay.prototype.onAdd = function () {
+			recluster();
+		};
+		ClusterProjectionOverlay.prototype.draw = function () {};
+		ClusterProjectionOverlay.prototype.onRemove = function () {};
+
+		clusterOverlay = new ClusterProjectionOverlay();
+		clusterOverlay.setMap( map );
+
+		map.addListener( 'idle', recluster );
+	}
+
+	/**
+	 * Recompute marker clusters for the current zoom/pan and redraw them.
+	 *
+	 * @return {void}
+	 */
+	function recluster() {
+		if ( ! clusterOverlay ) {
+			return;
+		}
+		var projection = clusterOverlay.getProjection();
+		if ( ! projection ) {
+			return;
+		}
+
+		var CELL = 55; // Grid cell size in screen pixels.
+		var cells = {};
+
+		markers.forEach( function ( marker, index ) {
+			var pixel = projection.fromLatLngToDivPixel( marker.getPosition() );
+			var key = Math.round( pixel.x / CELL ) + '_' + Math.round( pixel.y / CELL );
+			if ( ! cells[ key ] ) {
+				cells[ key ] = [];
+			}
+			cells[ key ].push( index );
+		} );
+
+		// Clear the previous cluster bubbles before drawing the new set.
+		clusterMarkers.forEach( function ( m ) {
+			m.setMap( null );
+		} );
+		clusterMarkers = [];
+
+		var openMarkerStillVisible = false;
+
+		Object.keys( cells ).forEach( function ( key ) {
+			var indexes = cells[ key ];
+
+			if ( indexes.length === 1 ) {
+				var only = markers[ indexes[ 0 ] ];
+				only.setMap( map );
+				if ( only === openMarker ) {
+					openMarkerStillVisible = true;
+				}
+				return;
+			}
+
+			// Multiple stores in this cell: hide them and show one bubble.
+			var latSum = 0;
+			var lngSum = 0;
+			var bounds = new google.maps.LatLngBounds();
+
+			indexes.forEach( function ( idx ) {
+				var pos = markers[ idx ].getPosition();
+				markers[ idx ].setMap( null );
+				latSum += pos.lat();
+				lngSum += pos.lng();
+				bounds.extend( pos );
+			} );
+
+			var center = { lat: latSum / indexes.length, lng: lngSum / indexes.length };
+			var size = clusterSize( indexes.length );
+
+			var bubble = new google.maps.Marker( {
+				position: center,
+				map: map,
+				icon: clusterIcon( data.markerColor, size ),
+				label: {
+					text: String( indexes.length ),
+					color: '#ffffff',
+					fontSize: size >= 50 ? '15px' : '13px',
+					fontWeight: '700'
+				},
+				zIndex: 500
+			} );
+
+			bubble.addListener( 'click', function () {
+				infoWindow.close();
+				map.fitBounds( bounds, 50 );
+			} );
+
+			clusterMarkers.push( bubble );
+		} );
+
+		// If the store behind the open info window just got folded into a
+		// cluster, close the (now-orphaned) info window.
+		if ( openMarker && ! openMarkerStillVisible ) {
+			infoWindow.close();
+			openMarker = null;
 		}
 	}
 
