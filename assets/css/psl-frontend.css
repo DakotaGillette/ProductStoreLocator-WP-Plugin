@@ -121,9 +121,9 @@
 .psl-iw {
 	width: 300px;
 	max-width: 82vw;
-	font-size: 13px;
-	line-height: 1.5;
-	color: var(--psl-text);
+	font-size: 14px;
+	line-height: 1.55;
+	color: #2b2f33;
 }
 
 /* Media (photo + logo), bled to the info-window edges. */
@@ -189,20 +189,15 @@
 
 .psl-iw__title {
 	margin: 0 0 8px;
-	font-size: 1.15rem;
+	font-size: 1.25rem;
 	font-weight: 700;
 	line-height: 1.25;
+	color: #1a1d20;
 }
 
 .psl-iw__about {
 	margin: 0 0 12px;
-	color: #444;
-}
-
-.psl-iw__readmore,
-.psl-iw__hours-toggle,
-.psl-iw__btn {
-	font-family: inherit;
+	color: #3c434a;
 }
 
 .psl-iw__readmore {
@@ -212,75 +207,101 @@
 	color: var(--psl-accent);
 	font-weight: 600;
 	cursor: pointer;
+	font: inherit;
 }
 
-/* Action buttons. */
+.psl-iw__readmore:hover {
+	text-decoration: underline;
+}
+
+/* Inline SVG icons inherit the current text color. */
+.psl-iw__svg {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+}
+
+/* Action buttons — both identical, white icon + label. */
 .psl-iw__actions {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	margin: 12px 0;
+	margin: 12px 0 14px;
 }
 
 .psl-iw__btn {
-	display: block;
-	text-align: center;
-	padding: 10px 14px;
-	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 11px 14px;
+	border-radius: 10px;
 	font-weight: 600;
 	font-size: 0.95rem;
 	color: #fff !important;
 	text-decoration: none !important;
 	background: var(--psl-accent);
-	transition: background-color 0.15s ease;
+	transition: filter 0.15s ease;
+}
+
+.psl-iw__btn .psl-iw__svg {
+	color: #fff;
 }
 
 .psl-iw__btn:hover,
 .psl-iw__btn:focus {
-	background: var(--psl-accent-hover);
+	filter: brightness( 0.92 );
 	color: #fff !important;
 }
 
 /* Info rows. */
 .psl-iw__row {
 	display: flex;
-	gap: 8px;
+	gap: 10px;
 	align-items: flex-start;
-	margin: 8px 0;
+	margin: 9px 0;
+	font-size: 14px;
+	color: #3c434a;
+}
+
+.psl-iw__row .psl-iw__svg {
+	color: #8a9199;
+	margin-top: 1px;
 }
 
 .psl-iw__row a {
-	color: var(--psl-text);
+	color: #3c434a;
 	text-decoration: none;
 }
 
 .psl-iw__row a:hover {
-	text-decoration: underline;
-}
-
-.psl-iw__icon {
-	flex: 0 0 auto;
-	line-height: 1.4;
+	color: var(--psl-accent);
 }
 
 /* Hours block. */
 .psl-iw__hours {
-	margin-top: 8px;
-	border-top: 1px solid var(--psl-border);
-	padding-top: 4px;
+	margin-top: 10px;
+	border-top: 1px solid #e6e8eb;
+	padding-top: 2px;
 }
 
 .psl-iw__hours-toggle {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 10px;
 	width: 100%;
 	background: none;
 	border: none;
-	padding: 8px 0;
+	padding: 10px 0;
 	cursor: pointer;
-	font-size: 13px;
+	font: inherit;
+	font-size: 14px;
 	text-align: left;
+	color: #3c434a;
+}
+
+.psl-iw__hours-toggle .psl-iw__svg {
+	color: #8a9199;
 }
 
 .psl-iw__status {
@@ -288,17 +309,18 @@
 }
 
 .psl-iw__status.is-open {
-	color: #1a7f37;
+	color: #157347;
 }
 
 .psl-iw__status.is-closed {
-	color: #b32d2e;
+	color: #c0392b;
 }
 
 .psl-iw__caret {
 	margin-left: auto;
-	transition: transform 0.15s ease;
-	color: var(--psl-muted, #646970);
+	font-size: 11px;
+	color: #8a9199;
+	transition: transform 0.18s ease;
 }
 
 .psl-iw__hours.is-expanded .psl-iw__caret {
@@ -307,7 +329,7 @@
 
 .psl-iw__hours-table {
 	display: none;
-	padding: 4px 0 6px 26px;
+	padding: 4px 0 8px 26px;
 }
 
 .psl-iw__hours.is-expanded .psl-iw__hours-table {
@@ -318,11 +340,27 @@
 	display: flex;
 	justify-content: space-between;
 	gap: 16px;
-	padding: 3px 0;
+	padding: 4px 0;
+	font-size: 13.5px;
+	color: #3c434a;
+}
+
+.psl-iw__hours-line .psl-iw__day {
+	color: #6b7280;
+}
+
+.psl-iw__hours-line .psl-iw__day-hours {
+	text-align: right;
+	white-space: nowrap;
 }
 
 .psl-iw__hours-line.is-today {
 	font-weight: 700;
+	color: #1a1d20;
+}
+
+.psl-iw__hours-line.is-today .psl-iw__day {
+	color: #1a1d20;
 }
 
 .psl-iw__hours-text {

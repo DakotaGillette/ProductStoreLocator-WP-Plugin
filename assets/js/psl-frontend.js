@@ -12,6 +12,7 @@
 
 	var data = window.PSL_DATA || {};
 	var map = null;
+	var geocoder = null;
 	var infoWindow = null;
 	var markers = [];
 	var searchBusy = false;
@@ -106,6 +107,25 @@
 			node.textContent = text;
 		}
 		return node;
+	}
+
+	/**
+	 * Return a monochrome inline-SVG icon that inherits the current text color.
+	 *
+	 * @param {string} name Icon name.
+	 * @return {HTMLElement}
+	 */
+	function svgIcon( name ) {
+		var paths = {
+			phone: '<path d="M6.6 10.8a15.6 15.6 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.57 3.6a1 1 0 0 1-.25 1z"/>',
+			directions: '<path d="M21.7 11.29 12.71 2.3a1 1 0 0 0-1.42 0l-9 9a1 1 0 0 0 0 1.42l9 9a1 1 0 0 0 1.42 0l9-9a1 1 0 0 0 0-1.43zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5z"/>',
+			pin: '<path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/>',
+			clock: '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm3.3 13.7L11 13V7h1.5v5.2l3.5 2.1z"/>'
+		};
+		var span = el( 'span', 'psl-iw__svg' );
+		span.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false">' +
+			( paths[ name ] || '' ) + '</svg>';
+		return span;
 	}
 
 	/**
@@ -240,7 +260,7 @@
 			}
 			var wrap = el( 'div', 'psl-iw__hours' );
 			var row = el( 'div', 'psl-iw__row' );
-			row.appendChild( el( 'span', 'psl-iw__icon', '🕒' ) );
+			row.appendChild( svgIcon( 'clock' ) );
 			var textBox = el( 'div', 'psl-iw__hours-text' );
 			store.hours.split( '\n' ).forEach( function ( line ) {
 				textBox.appendChild( el( 'div', null, line ) );
@@ -257,8 +277,7 @@
 		toggle.type = 'button';
 		toggle.setAttribute( 'aria-expanded', 'false' );
 
-		var icon = el( 'span', 'psl-iw__icon', '🕒' );
-		toggle.appendChild( icon );
+		toggle.appendChild( svgIcon( 'clock' ) );
 
 		var statusText = el( 'span', 'psl-iw__status' );
 		if ( status && status.open ) {
@@ -318,6 +337,11 @@
 		var i18n = data.i18n || {};
 		var card = el( 'div', 'psl-iw' );
 
+		// Use the site's body font instead of the map's default Roboto.
+		try {
+			card.style.fontFamily = getComputedStyle( document.body ).fontFamily;
+		} catch ( e ) {}
+
 		// Media: photo banner (featured image) + optional logo badge.
 		if ( store.photo || store.logo ) {
 			var media = el( 'div', 'psl-iw__media' + ( store.photo ? '' : ' psl-iw__media--nologo-bg' ) );
@@ -371,23 +395,25 @@
 			body.appendChild( about );
 		}
 
-		// Action buttons.
+		// Action buttons (identical style, white icon + label).
 		var actions = el( 'div', 'psl-iw__actions' );
 		if ( store.show_phone && store.phone ) {
 			var callLink = document.createElement( 'a' );
-			callLink.className = 'psl-iw__btn psl-iw__btn--call';
+			callLink.className = 'psl-iw__btn';
 			callLink.href = 'tel:' + store.phone.replace( /[^0-9+]/g, '' );
-			callLink.appendChild( el( 'span', null, '📞 ' + ( i18n.callUs || 'Call Us' ) ) );
+			callLink.appendChild( svgIcon( 'phone' ) );
+			callLink.appendChild( el( 'span', null, i18n.callUs || 'Call Us' ) );
 			actions.appendChild( callLink );
 		}
 		if ( data.showDirections ) {
 			var dir = document.createElement( 'a' );
-			dir.className = 'psl-iw__btn psl-iw__btn--dir';
+			dir.className = 'psl-iw__btn';
 			dir.href = 'https://www.google.com/maps/dir/?api=1&destination=' +
 				encodeURIComponent( store.lat + ',' + store.lng );
 			dir.target = '_blank';
 			dir.rel = 'noopener noreferrer';
-			dir.appendChild( el( 'span', null, '➤ ' + ( i18n.directions || 'Get Directions' ) ) );
+			dir.appendChild( svgIcon( 'directions' ) );
+			dir.appendChild( el( 'span', null, i18n.directions || 'Get Directions' ) );
 			actions.appendChild( dir );
 		}
 		if ( actions.childNodes.length ) {
@@ -397,7 +423,7 @@
 		// Phone row.
 		if ( store.show_phone && store.phone ) {
 			var phoneRow = el( 'div', 'psl-iw__row' );
-			phoneRow.appendChild( el( 'span', 'psl-iw__icon', '📞' ) );
+			phoneRow.appendChild( svgIcon( 'phone' ) );
 			var phoneLink = document.createElement( 'a' );
 			phoneLink.href = 'tel:' + store.phone.replace( /[^0-9+]/g, '' );
 			phoneLink.textContent = store.phone;
@@ -408,7 +434,7 @@
 		// Address row.
 		if ( store.address ) {
 			var addrRow = el( 'div', 'psl-iw__row' );
-			addrRow.appendChild( el( 'span', 'psl-iw__icon', '📍' ) );
+			addrRow.appendChild( svgIcon( 'pin' ) );
 			addrRow.appendChild( el( 'span', null, store.address ) );
 			body.appendChild( addrRow );
 		}
@@ -458,10 +484,17 @@
 		} );
 
 		if ( markers.length > 1 ) {
-			map.fitBounds( bounds );
+			// Fit so the outermost stores sit comfortably inside the viewport.
+			map.fitBounds( bounds, 60 );
+			// Never zoom in so far that a tight cluster fills the whole map.
+			google.maps.event.addListenerOnce( map, 'idle', function () {
+				if ( map.getZoom() > 15 ) {
+					map.setZoom( 15 );
+				}
+			} );
 		} else if ( markers.length === 1 ) {
 			map.setCenter( bounds.getCenter() );
-			map.setZoom( data.searchZoom || 11 );
+			map.setZoom( 14 );
 		}
 	}
 
@@ -491,6 +524,49 @@
 	 *
 	 * @return {void}
 	 */
+	/**
+	 * Recenter and zoom the map to a coordinate.
+	 *
+	 * @param {number} lat Latitude.
+	 * @param {number} lng Longitude.
+	 * @return {void}
+	 */
+	function recenterTo( lat, lng ) {
+		map.setCenter( { lat: parseFloat( lat ), lng: parseFloat( lng ) } );
+		map.setZoom( parseInt( data.searchZoom, 10 ) || 12 );
+	}
+
+	/**
+	 * Fallback geocoding using the client-side Geocoder (uses the referrer-
+	 * restricted Maps key, so it works even if the server proxy is unconfigured).
+	 *
+	 * @param {string}   query  Search text.
+	 * @param {Element}  status Status element.
+	 * @param {Function} done   Called when finished.
+	 * @return {void}
+	 */
+	function clientGeocode( query, status, done ) {
+		if ( ! geocoder ) {
+			if ( status ) {
+				status.textContent = ( data.i18n && data.i18n.geoError ) || 'Location not found.';
+			}
+			done();
+			return;
+		}
+		geocoder.geocode( { address: query }, function ( results, gStatus ) {
+			if ( gStatus === 'OK' && results && results[ 0 ] ) {
+				var loc = results[ 0 ].geometry.location;
+				recenterTo( loc.lat(), loc.lng() );
+				if ( status ) {
+					status.textContent = '';
+				}
+			} else if ( status ) {
+				status.textContent = ( data.i18n && data.i18n.geoError ) || 'Location not found.';
+			}
+			done();
+		} );
+	}
+
 	function handleSearch() {
 		var input = document.getElementById( 'psl-zip' );
 		var status = document.getElementById( 'psl-search-status' );
@@ -514,41 +590,52 @@
 			status.textContent = ( data.i18n && data.i18n.searching ) || 'Searching…';
 		}
 
+		var finish = function () {
+			searchBusy = false;
+			if ( button ) {
+				button.disabled = false;
+			}
+		};
+
 		var url = data.geocodeUrl + ( data.geocodeUrl.indexOf( '?' ) === -1 ? '?' : '&' ) +
 			'query=' + encodeURIComponent( query );
 
-		// No auth header is sent on purpose: this is a public, anonymous endpoint
-		// (protected server-side by caching, per-IP rate limiting, and a hard cap).
-		// Sending a nonce would 403 once it goes stale on a cached page.
-		fetch( url, {
-			method: 'GET'
-		} )
+		// Public/anonymous endpoint (cached, rate-limited, capped) — no auth header.
+		fetch( url, { method: 'GET' } )
 			.then( function ( response ) {
 				return response.json().then( function ( body ) {
-					return { ok: response.ok, body: body };
+					return { ok: response.ok, body: body || {} };
 				} );
 			} )
 			.then( function ( result ) {
-				if ( result.ok && result.body && typeof result.body.lat !== 'undefined' ) {
-					map.setCenter( { lat: parseFloat( result.body.lat ), lng: parseFloat( result.body.lng ) } );
-					map.setZoom( data.searchZoom || 11 );
+				var body = result.body;
+
+				if ( result.ok && typeof body.lat !== 'undefined' ) {
+					recenterTo( body.lat, body.lng );
 					if ( status ) {
 						status.textContent = '';
 					}
-				} else if ( status ) {
-					status.textContent = messageForError( result.body && result.body.error );
+					finish();
+					return;
 				}
+
+				var err = body.error;
+				// Respect rate limit / cap; and show genuine "not found".
+				if ( err === 'rate_limited' || err === 'cap_reached' ||
+					err === 'zero_results' || err === 'invalid' ) {
+					if ( status ) {
+						status.textContent = messageForError( err );
+					}
+					finish();
+					return;
+				}
+
+				// Config/denied/other server issue → try client-side geocoding.
+				clientGeocode( query, status, finish );
 			} )
 			.catch( function () {
-				if ( status ) {
-					status.textContent = ( data.i18n && data.i18n.searchError ) || 'Something went wrong.';
-				}
-			} )
-			.finally( function () {
-				searchBusy = false;
-				if ( button ) {
-					button.disabled = false;
-				}
+				// Server unreachable → client-side fallback.
+				clientGeocode( query, status, finish );
 			} );
 	}
 
@@ -596,9 +683,12 @@
 			styles: resolveStyles(),
 			mapTypeControl: false,
 			streetViewControl: false,
-			fullscreenControl: true
+			fullscreenControl: true,
+			// Plain mouse-wheel zoom (no Ctrl needed), like Elfsight.
+			gestureHandling: 'greedy'
 		} );
 
+		geocoder = new google.maps.Geocoder();
 		infoWindow = new google.maps.InfoWindow();
 
 		addMarkers();

@@ -118,7 +118,7 @@ final class Shortcode {
 				'lng' => (float) Settings::get( 'psl_default_center_lng' ),
 			),
 			'defaultZoom'    => (int) Settings::get( 'psl_default_zoom' ),
-			'searchZoom'     => 11,
+			'searchZoom'     => 12,
 			'mapType'        => (string) Settings::get( 'psl_map_type' ),
 			'mapStyle'       => (string) Settings::get( 'psl_map_style' ),
 			'mapStyleJson'   => (string) Settings::get( 'psl_map_style_json' ),

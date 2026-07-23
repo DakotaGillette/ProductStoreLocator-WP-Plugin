@@ -316,6 +316,7 @@
 					'regularOpeningHours',
 					'utcOffsetMinutes',
 					'editorialSummary',
+					'photos',
 					'id'
 				]
 			} );
@@ -358,6 +359,18 @@
 		var aboutEl = byId( 'psl-store-about' );
 		if ( place.editorialSummary && aboutEl && ! aboutEl.value ) {
 			aboutEl.value = place.editorialSummary;
+		}
+
+		// Store photo URL — imported into the media library on save (once).
+		var photoField = byId( 'psl-store-google-photo' );
+		if ( photoField ) {
+			photoField.value = '';
+			if ( place.photos && place.photos.length && typeof place.photos[ 0 ].getURI === 'function' ) {
+				try {
+					// The Maps JS Place API uses maxWidth/maxHeight (pixels).
+					photoField.value = place.photos[ 0 ].getURI( { maxWidth: 1200, maxHeight: 900 } );
+				} catch ( e ) {}
+			}
 		}
 
 		if ( place.regularOpeningHours && place.regularOpeningHours.weekdayDescriptions ) {

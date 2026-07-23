@@ -220,9 +220,9 @@ final class Metabox {
 			<?php endif; ?>
 
 			<p class="psl-intro">
-				<?php esc_html_e( 'Add a store in three quick steps. Search Google first — it fills in the address, phone, hours and map location automatically. You can edit anything afterward.', 'product-store-locator' ); ?>
+				<?php esc_html_e( 'Add a store in three quick steps. Search Google first — it fills in the name, address, phone, hours, description and even a store photo automatically. You can edit anything afterward.', 'product-store-locator' ); ?>
 				<br>
-				<?php esc_html_e( 'Tip: set a Featured Image (in the sidebar) to show a store photo at the top of the map popup.', 'product-store-locator' ); ?>
+				<?php esc_html_e( 'A photo from Google is imported as the Featured Image on save (if you haven’t set one). You can always replace it in the sidebar.', 'product-store-locator' ); ?>
 			</p>
 
 			<?php /* Step 1 — search */ ?>
@@ -263,6 +263,7 @@ final class Metabox {
 					<p class="psl-help"><?php esc_html_e( 'Filled from Google. When picked from search, the map popup also shows a live “Open / Closed” status.', 'product-store-locator' ); ?></p>
 					<input type="hidden" id="psl-store-hours-json" name="store_hours_json" value="<?php echo esc_attr( $hours_json ); ?>" />
 					<input type="hidden" id="psl-store-utc-offset" name="store_utc_offset" value="<?php echo esc_attr( $utc_offset ); ?>" />
+					<input type="hidden" id="psl-store-google-photo" name="store_google_photo" value="" />
 				</div>
 
 				<div class="psl-field">
@@ -383,6 +384,13 @@ final class Metabox {
 		// Optional logo attachment.
 		$logo_id = isset( $_POST['store_logo_id'] ) ? absint( wp_unslash( $_POST['store_logo_id'] ) ) : 0;
 		update_post_meta( $post_id, 'store_logo_id', $logo_id );
+
+		// Import a Google photo into the media library as the featured image,
+		// but only when the admin hasn't already set one.
+		$photo_url = isset( $_POST['store_google_photo'] ) ? esc_url_raw( wp_unslash( $_POST['store_google_photo'] ) ) : '';
+		if ( '' !== $photo_url && ! has_post_thumbnail( $post_id ) ) {
+			$this->import_google_photo( $post_id, $photo_url );
+		}
 		$this->update_multiline( $post_id, 'store_hours' );
 		$this->update_multiline( $post_id, 'store_about' );
 
@@ -403,6 +411,67 @@ final class Metabox {
 		update_post_meta( $post_id, 'store_show_phone', isset( $_POST['store_show_phone'] ) ? 1 : 0 );
 		update_post_meta( $post_id, 'store_show_hours', isset( $_POST['store_show_hours'] ) ? 1 : 0 );
 		update_post_meta( $post_id, 'store_show_about', isset( $_POST['store_show_about'] ) ? 1 : 0 );
+	}
+
+	/**
+	 * Download a Google Places photo into the media library and set it as the
+	 * store's featured image. Runs once (only when no thumbnail exists).
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $url     Google-hosted image URL.
+	 * @return void
+	 */
+	private function import_google_photo( int $post_id, string $url ): void {
+		// Only trust Google-hosted image hosts (guards against SSRF via the field).
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		if ( '' === $host ) {
+			return;
+		}
+		$allowed = false;
+		foreach ( array( 'googleusercontent.com', 'googleapis.com', 'ggpht.com', 'gstatic.com' ) as $suffix ) {
+			if ( $host === $suffix || substr( $host, -( strlen( $suffix ) + 1 ) ) === '.' . $suffix ) {
+				$allowed = true;
+				break;
+			}
+		}
+		if ( ! $allowed ) {
+			return;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$tmp = download_url( $url, 30 );
+		if ( is_wp_error( $tmp ) ) {
+			return;
+		}
+
+		// Derive a proper extension from the actual image type.
+		$info = @getimagesize( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		$mime = is_array( $info ) && isset( $info['mime'] ) ? $info['mime'] : 'image/jpeg';
+		$ext_map = array(
+			'image/jpeg' => 'jpg',
+			'image/png'  => 'png',
+			'image/webp' => 'webp',
+			'image/gif'  => 'gif',
+		);
+		$ext = $ext_map[ $mime ] ?? 'jpg';
+
+		$file_array = array(
+			'name'     => 'store-photo-' . $post_id . '.' . $ext,
+			'tmp_name' => $tmp,
+		);
+
+		$attach_id = media_handle_sideload( $file_array, $post_id, get_the_title( $post_id ) );
+		if ( is_wp_error( $attach_id ) ) {
+			if ( file_exists( $tmp ) ) {
+				wp_delete_file( $tmp );
+			}
+			return;
+		}
+
+		set_post_thumbnail( $post_id, $attach_id );
 	}
 
 	/**
