@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "product-store-locator/map",
+	"version": "1.0.0",
+	"title": "Store Locator",
+	"category": "widgets",
+	"icon": "location-alt",
+	"description": "Display a Google Maps store locator with ZIP/postcode search.",
+	"keywords": [ "map", "store", "locator", "location", "google maps" ],
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"attributes": {
+		"height": {
+			"type": "number",
+			"default": 500
+		}
+	},
+	"textdomain": "product-store-locator",
+	"editorScript": "file:./editor.js"
+}

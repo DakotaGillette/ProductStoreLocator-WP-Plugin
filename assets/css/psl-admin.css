@@ -1,0 +1,355 @@
+/**
+ * Product Store Locator — admin store form styles.
+ *
+ * A guided, card-based layout that replaces the default post editor UI.
+ */
+
+.psl-metabox {
+	--psl-accent: #2271b1;
+	--psl-accent-dark: #135e96;
+	--psl-border: #dcdcde;
+	--psl-bg: #fff;
+	--psl-muted: #646970;
+	--psl-radius: 8px;
+
+	max-width: 720px;
+	margin: 4px 0;
+}
+
+.psl-metabox .psl-notice {
+	padding: 10px 14px;
+	background: #fcf9e8;
+	border-left: 4px solid #dba617;
+	border-radius: 4px;
+	margin: 0 0 16px;
+}
+
+.psl-intro {
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--psl-muted);
+	margin: 0 0 18px;
+}
+
+/* Cards / steps ------------------------------------------------------ */
+.psl-card {
+	background: var(--psl-bg);
+	border: 1px solid var(--psl-border);
+	border-radius: var(--psl-radius);
+	padding: 18px 20px 20px;
+	margin: 0 0 18px;
+	box-shadow: 0 1px 2px rgba( 0, 0, 0, 0.04 );
+}
+
+.psl-card__title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 14px;
+	font-size: 15px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.psl-step {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: var(--psl-accent);
+	color: #fff;
+	font-size: 13px;
+	font-weight: 700;
+	flex: 0 0 auto;
+}
+
+/* Fields ------------------------------------------------------------- */
+.psl-field {
+	margin: 0 0 16px;
+}
+
+.psl-field:last-child {
+	margin-bottom: 0;
+}
+
+.psl-metabox label,
+.psl-metabox .psl-label {
+	display: block;
+	font-weight: 600;
+	font-size: 13px;
+	margin: 0 0 5px;
+	color: #1d2327;
+}
+
+.psl-input {
+	width: 100%;
+	padding: 8px 11px;
+	font-size: 14px;
+	line-height: 1.5;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+	box-sizing: border-box;
+	background: #fff;
+}
+
+.psl-input:focus {
+	border-color: var(--psl-accent);
+	box-shadow: 0 0 0 1px var(--psl-accent);
+	outline: 2px solid transparent;
+}
+
+textarea.psl-input {
+	resize: vertical;
+	min-height: 72px;
+}
+
+.psl-help {
+	font-size: 12.5px;
+	color: var(--psl-muted);
+	margin: 6px 0 0;
+	line-height: 1.5;
+}
+
+/* Search ------------------------------------------------------------- */
+.psl-combo {
+	position: relative;
+}
+
+.psl-search-controls {
+	display: flex;
+	gap: 8px;
+	align-items: stretch;
+}
+
+.psl-input--search {
+	flex: 1 1 auto;
+	font-size: 15px;
+	padding: 10px 13px;
+}
+
+.psl-search-controls .button {
+	flex: 0 0 auto;
+	height: auto;
+}
+
+/* Dropdown of results, anchored under the search box. */
+.psl-search-results {
+	list-style: none;
+	margin: 4px 0 0;
+	padding: 4px;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	z-index: 1000;
+	background: #fff;
+	border: 1px solid var(--psl-border);
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba( 0, 0, 0, 0.14 );
+	max-height: 320px;
+	overflow-y: auto;
+	display: none;
+}
+
+.psl-search-results.is-open {
+	display: block;
+}
+
+.psl-search-results__item {
+	margin: 0;
+}
+
+.psl-search-results__button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	padding: 9px 12px;
+	background: transparent;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.psl-search-results__button:hover,
+.psl-search-results__button.is-active {
+	background: #f0f6fc;
+}
+
+.psl-search-results__button strong {
+	display: block;
+	color: #1d2327;
+	font-weight: 600;
+}
+
+.psl-search-results__button span {
+	display: block;
+	color: var(--psl-muted);
+	font-size: 12px;
+}
+
+.psl-search-results__empty {
+	padding: 9px 12px;
+	color: var(--psl-muted);
+	font-style: italic;
+}
+
+/* Coordinates (advanced) -------------------------------------------- */
+.psl-advanced {
+	margin-top: 16px;
+	border-top: 1px solid var(--psl-border);
+	padding-top: 12px;
+}
+
+.psl-advanced > summary {
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--psl-accent);
+	list-style: revert;
+}
+
+.psl-advanced__body {
+	margin-top: 14px;
+}
+
+.psl-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0 16px;
+}
+
+/* Map preview -------------------------------------------------------- */
+.psl-admin-map {
+	position: relative;
+	width: 100%;
+	height: 240px;
+	border: 1px solid var(--psl-border);
+	border-radius: 6px;
+	background: #f0f0f1;
+	overflow: hidden;
+}
+
+.psl-admin-map__empty {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate( -50%, -50% );
+	color: var(--psl-muted);
+	font-size: 13px;
+	font-style: italic;
+	text-align: center;
+	padding: 0 12px;
+}
+
+/* Logo picker -------------------------------------------------------- */
+.psl-logo-picker {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.psl-logo-preview {
+	width: 72px;
+	height: 72px;
+	flex: 0 0 auto;
+	border: 1px dashed var(--psl-border);
+	border-radius: 50%;
+	background: #f6f7f7;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.psl-logo-preview.has-logo {
+	border-style: solid;
+}
+
+.psl-logo-preview img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.psl-logo-buttons {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+}
+
+.psl-logo-remove.hidden {
+	display: none;
+}
+
+/* Toggles ------------------------------------------------------------ */
+.psl-toggles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.psl-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 14px;
+	border: 1px solid var(--psl-border);
+	border-radius: 999px;
+	cursor: pointer;
+	font-weight: 500 !important;
+	margin: 0 !important;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.psl-toggle:hover {
+	border-color: var(--psl-accent);
+}
+
+.psl-toggle input {
+	margin: 0;
+}
+
+.psl-toggle:has( input:checked ) {
+	border-color: var(--psl-accent);
+	background: #f0f6fc;
+}
+
+.psl-toggle__text {
+	font-size: 13px;
+}
+
+/* The WP post-title field is replaced by the "Store name" field in the form. */
+#titlediv,
+#title-prompt-text {
+	display: none;
+}
+
+/* Bottom save row. */
+.psl-save-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex-wrap: wrap;
+	margin-top: 6px;
+	padding-top: 16px;
+	border-top: 1px solid var(--psl-border);
+}
+
+.psl-save-row .psl-help {
+	margin: 0;
+}
+
+@media ( max-width: 600px ) {
+	.psl-grid-2 {
+		grid-template-columns: 1fr;
+	}
+
+	.psl-search-controls {
+		flex-direction: column;
+	}
+}

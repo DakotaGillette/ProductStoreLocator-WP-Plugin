@@ -1,0 +1,365 @@
+/**
+ * Product Store Locator — frontend styles.
+ * Colors are exposed as CSS variables so themes can override them.
+ */
+
+.psl-wrapper {
+	--psl-map-height: 1000px; /* ~2x the previous default; tune per shortcode. */
+	--psl-accent: #d9433f;
+	--psl-accent-hover: #b8352f;
+	--psl-border: #d5d8dc;
+	--psl-text: #1e1e1e;
+	--psl-bg: #ffffff;
+	--psl-radius: 10px;
+
+	width: 100%;
+	box-sizing: border-box;
+	color: var(--psl-text);
+	position: relative;
+}
+
+.psl-wrapper *,
+.psl-wrapper *::before,
+.psl-wrapper *::after {
+	box-sizing: border-box;
+}
+
+/* Map area + overlay ------------------------------------------------- */
+.psl-map-area {
+	position: relative;
+	width: 100%;
+	height: var(--psl-map-height);
+	min-height: 320px;
+	border-radius: var(--psl-radius);
+	overflow: hidden;
+	border: 1px solid var(--psl-border);
+}
+
+.psl-map {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+/* Desktop: search box floats in the top-left corner of the map. */
+.psl-search {
+	position: absolute;
+	top: 14px;
+	left: 14px;
+	z-index: 5;
+	width: min( 340px, calc( 100% - 28px ) );
+	background: var(--psl-bg);
+	border-radius: 12px;
+	padding: 12px 14px;
+	box-shadow: 0 6px 20px rgba( 0, 0, 0, 0.18 );
+}
+
+.psl-search__label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 700;
+	font-size: 0.95rem;
+}
+
+.psl-search__controls {
+	display: flex;
+	gap: 8px;
+}
+
+.psl-search__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0.55rem 0.7rem;
+	font-size: 0.95rem;
+	color: var(--psl-text);
+	background: var(--psl-bg);
+	border: 1px solid var(--psl-border);
+	border-radius: 8px;
+}
+
+.psl-search__input:focus {
+	outline: 2px solid var(--psl-accent);
+	outline-offset: 1px;
+	border-color: var(--psl-accent);
+}
+
+.psl-search__button {
+	flex: 0 0 auto;
+	padding: 0.55rem 1rem;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: #fff;
+	background: var(--psl-accent);
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.psl-search__button:hover,
+.psl-search__button:focus {
+	background: var(--psl-accent-hover);
+}
+
+.psl-search__status {
+	margin: 8px 0 0;
+	min-height: 1.1em;
+	font-size: 0.85rem;
+	color: var(--psl-accent-hover);
+}
+
+.psl-error {
+	padding: 1rem;
+	background: #fbeaea;
+	border: 1px solid var(--psl-accent);
+	border-radius: var(--psl-radius);
+	color: var(--psl-accent-hover);
+}
+
+/* Info window card --------------------------------------------------- */
+.psl-iw {
+	width: 300px;
+	max-width: 82vw;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--psl-text);
+}
+
+/* Media (photo + logo), bled to the info-window edges. */
+.psl-iw__media {
+	position: relative;
+	margin: -12px -12px 0;
+}
+
+.psl-iw__media--nologo-bg {
+	background: linear-gradient( 135deg, var(--psl-accent), var(--psl-accent-hover) );
+	min-height: 56px;
+}
+
+.psl-iw__photo {
+	height: 150px;
+	overflow: hidden;
+	background: #f0f0f1;
+}
+
+.psl-iw__photo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+/* Circular logo badge overlapping the photo's bottom-left. */
+.psl-iw__logo {
+	position: absolute;
+	left: 14px;
+	bottom: -24px;
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	overflow: hidden;
+	background: #fff;
+	border: 3px solid #fff;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.2 );
+}
+
+.psl-iw__logo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* When there is no photo, center the logo in the header strip. */
+.psl-iw__logo--nophoto {
+	position: static;
+	margin: 10px auto -20px;
+	left: auto;
+	bottom: auto;
+}
+
+.psl-iw__body {
+	padding: 12px 2px 2px;
+}
+
+/* Extra top room so the protruding logo doesn't overlap the title. */
+.psl-iw__body--logo {
+	padding-top: 34px;
+}
+
+.psl-iw__title {
+	margin: 0 0 8px;
+	font-size: 1.15rem;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.psl-iw__about {
+	margin: 0 0 12px;
+	color: #444;
+}
+
+.psl-iw__readmore,
+.psl-iw__hours-toggle,
+.psl-iw__btn {
+	font-family: inherit;
+}
+
+.psl-iw__readmore {
+	background: none;
+	border: none;
+	padding: 0;
+	color: var(--psl-accent);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+/* Action buttons. */
+.psl-iw__actions {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 12px 0;
+}
+
+.psl-iw__btn {
+	display: block;
+	text-align: center;
+	padding: 10px 14px;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.95rem;
+	color: #fff !important;
+	text-decoration: none !important;
+	background: var(--psl-accent);
+	transition: background-color 0.15s ease;
+}
+
+.psl-iw__btn:hover,
+.psl-iw__btn:focus {
+	background: var(--psl-accent-hover);
+	color: #fff !important;
+}
+
+/* Info rows. */
+.psl-iw__row {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	margin: 8px 0;
+}
+
+.psl-iw__row a {
+	color: var(--psl-text);
+	text-decoration: none;
+}
+
+.psl-iw__row a:hover {
+	text-decoration: underline;
+}
+
+.psl-iw__icon {
+	flex: 0 0 auto;
+	line-height: 1.4;
+}
+
+/* Hours block. */
+.psl-iw__hours {
+	margin-top: 8px;
+	border-top: 1px solid var(--psl-border);
+	padding-top: 4px;
+}
+
+.psl-iw__hours-toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	background: none;
+	border: none;
+	padding: 8px 0;
+	cursor: pointer;
+	font-size: 13px;
+	text-align: left;
+}
+
+.psl-iw__status {
+	font-weight: 600;
+}
+
+.psl-iw__status.is-open {
+	color: #1a7f37;
+}
+
+.psl-iw__status.is-closed {
+	color: #b32d2e;
+}
+
+.psl-iw__caret {
+	margin-left: auto;
+	transition: transform 0.15s ease;
+	color: var(--psl-muted, #646970);
+}
+
+.psl-iw__hours.is-expanded .psl-iw__caret {
+	transform: rotate( 180deg );
+}
+
+.psl-iw__hours-table {
+	display: none;
+	padding: 4px 0 6px 26px;
+}
+
+.psl-iw__hours.is-expanded .psl-iw__hours-table {
+	display: block;
+}
+
+.psl-iw__hours-line {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 3px 0;
+}
+
+.psl-iw__hours-line.is-today {
+	font-weight: 700;
+}
+
+.psl-iw__hours-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* Responsive --------------------------------------------------------- */
+@media ( max-width: 782px ) {
+	.psl-wrapper {
+		--psl-map-height: 640px;
+	}
+}
+
+@media ( max-width: 600px ) {
+	.psl-wrapper {
+		--psl-map-height: 460px;
+	}
+
+	/* On mobile the search sits above the map, full width, not overlaid. */
+	.psl-search {
+		position: static;
+		width: auto;
+		margin: 0 0 10px;
+		padding: 12px;
+		box-shadow: 0 1px 4px rgba( 0, 0, 0, 0.12 );
+	}
+
+	.psl-search__controls {
+		display: flex;
+	}
+
+	/* Keep tall popups (photo + expanded hours) usable on small screens. */
+	.psl-iw {
+		width: 260px;
+		max-height: 66vh;
+		overflow-y: auto;
+	}
+}

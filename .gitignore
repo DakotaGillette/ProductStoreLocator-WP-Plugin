@@ -1,0 +1,14 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.log
+*~
+.idea/
+.vscode/
+
+# Dependencies / build (none currently, but future-proofing)
+node_modules/
+vendor/
+
+# WordPress-local artifacts
+*.zip
