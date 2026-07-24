@@ -112,6 +112,7 @@ final class Settings {
 			'psl_map_style_json'     => '',
 			'psl_marker_color'       => '#d9433f',
 			'psl_show_directions_link' => 1,
+			'psl_auto_locate'        => 1,
 			// Cost / abuse controls.
 			'psl_geocode_server_key'  => '',
 			'psl_rate_limit_per_min'  => 10,
@@ -285,6 +286,18 @@ final class Settings {
 			array(
 				'key'   => 'psl_show_directions_link',
 				'label' => __( 'Show a "Get directions" link inside each info window.', 'product-store-locator' ),
+			)
+		);
+
+		add_settings_field(
+			'psl_auto_locate',
+			__( 'Auto-locate visitor', 'product-store-locator' ),
+			array( $this, 'field_checkbox' ),
+			self::PAGE,
+			'psl_section_map',
+			array(
+				'key'   => 'psl_auto_locate',
+				'label' => __( 'Ask the visitor for their location on load and zoom the map to their area (they can decline). Nearby stores stay in view.', 'product-store-locator' ),
 			)
 		);
 
@@ -602,6 +615,7 @@ final class Settings {
 		$clean['psl_marker_color'] = $color ? $color : $defaults['psl_marker_color'];
 
 		$clean['psl_show_directions_link'] = ! empty( $input['psl_show_directions_link'] ) ? 1 : 0;
+		$clean['psl_auto_locate']          = ! empty( $input['psl_auto_locate'] ) ? 1 : 0;
 
 		// Cost / abuse controls.
 		$clean['psl_geocode_server_key']  = isset( $input['psl_geocode_server_key'] ) ? sanitize_text_field( $input['psl_geocode_server_key'] ) : '';

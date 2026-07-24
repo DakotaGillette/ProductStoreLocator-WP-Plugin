@@ -20,6 +20,8 @@
 	var openMarker = null;  // Marker currently anchoring the open info window.
 	var searchBusy = false;
 	var flyInterval = null; // Active "fly to" zoom animation timer, if any.
+	var userMarker = null;  // "You are here" marker from geolocation.
+	var modalEl = null;     // Lazily-built mobile full-screen modal.
 
 	/**
 	 * Preset map styles (subset of Google's sample styles).
@@ -503,10 +505,97 @@
 	 * @return {void}
 	 */
 	function openStore( store, marker ) {
+		// On phones the tiny map info window is unusable — show a full-screen modal.
+		if ( isMobile() ) {
+			openModal( store );
+			return;
+		}
 		openMarker = marker;
 		map.panTo( marker.getPosition() );
 		infoWindow.setContent( buildInfoWindow( store ) );
 		infoWindow.open( { anchor: marker, map: map } );
+	}
+
+	/**
+	 * Whether we should use the full-screen modal instead of an info window.
+	 *
+	 * @return {boolean}
+	 */
+	function isMobile() {
+		return !! ( window.matchMedia && window.matchMedia( '(max-width: 600px)' ).matches );
+	}
+
+	/**
+	 * Build (once) the full-screen modal used for store details on mobile.
+	 *
+	 * @return {HTMLElement}
+	 */
+	function ensureModal() {
+		if ( modalEl ) {
+			return modalEl;
+		}
+
+		modalEl = document.createElement( 'div' );
+		modalEl.className = 'psl-modal';
+		modalEl.setAttribute( 'role', 'dialog' );
+		modalEl.setAttribute( 'aria-modal', 'true' );
+
+		// The modal lives on <body>, outside .psl-wrapper, so carry the brand
+		// accent color across manually (CSS variables don't reach here otherwise).
+		var accent = /^#[0-9a-fA-F]{3,8}$/.test( data.markerColor || '' ) ? data.markerColor : '#d9433f';
+		modalEl.style.setProperty( '--psl-accent', accent );
+		modalEl.style.setProperty( '--psl-accent-hover', accent );
+
+		var backdrop = el( 'div', 'psl-modal__backdrop' );
+		var panel = el( 'div', 'psl-modal__panel' );
+		var close = el( 'button', 'psl-modal__close' );
+		close.type = 'button';
+		close.setAttribute( 'aria-label', ( data.i18n && data.i18n.close ) || 'Close' );
+		close.innerHTML = '&times;';
+		var content = el( 'div', 'psl-modal__content' );
+
+		panel.appendChild( close );
+		panel.appendChild( content );
+		modalEl.appendChild( backdrop );
+		modalEl.appendChild( panel );
+
+		backdrop.addEventListener( 'click', closeModal );
+		close.addEventListener( 'click', closeModal );
+		document.addEventListener( 'keydown', function ( e ) {
+			if ( 'Escape' === e.key ) {
+				closeModal();
+			}
+		} );
+
+		document.body.appendChild( modalEl );
+		return modalEl;
+	}
+
+	/**
+	 * Open the mobile modal populated with a store's details.
+	 *
+	 * @param {Object} store Store record.
+	 * @return {void}
+	 */
+	function openModal( store ) {
+		var m = ensureModal();
+		var content = m.querySelector( '.psl-modal__content' );
+		content.innerHTML = '';
+		content.appendChild( buildInfoWindow( store ) );
+		m.classList.add( 'is-open' );
+		document.body.classList.add( 'psl-modal-open' );
+	}
+
+	/**
+	 * Close the mobile modal.
+	 *
+	 * @return {void}
+	 */
+	function closeModal() {
+		if ( modalEl ) {
+			modalEl.classList.remove( 'is-open' );
+			document.body.classList.remove( 'psl-modal-open' );
+		}
 	}
 
 	/**
@@ -708,12 +797,13 @@
 	 * target while stepping the zoom one level at a time, instead of an
 	 * abrupt multi-level jump.
 	 *
-	 * @param {number} lat Latitude.
-	 * @param {number} lng Longitude.
+	 * @param {number} lat        Latitude.
+	 * @param {number} lng        Longitude.
+	 * @param {number} targetZoom Destination zoom level.
 	 * @return {void}
 	 */
-	function recenterTo( lat, lng ) {
-		var targetZoom = parseInt( data.searchZoom, 10 ) || 12;
+	function flyTo( lat, lng, targetZoom ) {
+		targetZoom = parseInt( targetZoom, 10 ) || 12;
 		var target = new google.maps.LatLng( parseFloat( lat ), parseFloat( lng ) );
 
 		// Cancel any animation already in flight (e.g. rapid repeat searches).
@@ -752,6 +842,73 @@
 				map.setCenter( target ); // Settle exactly on the target.
 			}
 		}, 100 );
+	}
+
+	/**
+	 * Fly to a coordinate at the ZIP-search zoom level.
+	 *
+	 * @param {number} lat Latitude.
+	 * @param {number} lng Longitude.
+	 * @return {void}
+	 */
+	function recenterTo( lat, lng ) {
+		flyTo( lat, lng, parseInt( data.searchZoom, 10 ) || 12 );
+	}
+
+	/**
+	 * Ask the browser for the visitor's location and, if granted, glide the
+	 * map to their area at a moderate zoom so nearby stores are visible.
+	 *
+	 * @return {void}
+	 */
+	function autoLocate() {
+		if ( ! data.autoLocate || ! navigator.geolocation ) {
+			return;
+		}
+
+		navigator.geolocation.getCurrentPosition(
+			function ( position ) {
+				var lat = position.coords.latitude;
+				var lng = position.coords.longitude;
+				addUserMarker( lat, lng );
+				flyTo( lat, lng, parseInt( data.geolocateZoom, 10 ) || 10 );
+			},
+			function () { /* Denied or unavailable — keep the fit-all-stores view. */ },
+			{ enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+		);
+	}
+
+	/**
+	 * Drop a distinct "you are here" marker at the visitor's location.
+	 *
+	 * @param {number} lat Latitude.
+	 * @param {number} lng Longitude.
+	 * @return {void}
+	 */
+	function addUserMarker( lat, lng ) {
+		var position = { lat: lat, lng: lng };
+		if ( userMarker ) {
+			userMarker.setPosition( position );
+			return;
+		}
+
+		var svg =
+			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">' +
+			'<circle cx="11" cy="11" r="9" fill="#4285F4" fill-opacity="0.25"/>' +
+			'<circle cx="11" cy="11" r="5" fill="#4285F4" stroke="#ffffff" stroke-width="2.5"/>' +
+			'</svg>';
+
+		userMarker = new google.maps.Marker( {
+			position: position,
+			map: map,
+			zIndex: 1000,
+			title: ( data.i18n && data.i18n.youAreHere ) || 'You are here',
+			icon: {
+				url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent( svg ),
+				scaledSize: new google.maps.Size( 22, 22 ),
+				anchor: new google.maps.Point( 11, 11 )
+			}
+		} );
 	}
 
 	/**
@@ -911,6 +1068,7 @@
 
 		addMarkers();
 		bindSearch();
+		autoLocate();
 	}
 
 	// Expose the loader callback globally for the Google Maps script.

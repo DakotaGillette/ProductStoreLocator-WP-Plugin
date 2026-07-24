@@ -17,7 +17,8 @@ A custom WordPress plugin that provides a Google Maps–based store locator for 
 - Per-store visibility toggles for phone, hours, and about text.
 - Frontend `[product_store_locator]` shortcode **and** a matching Gutenberg block (`Store Locator`).
 - Rich map info windows: store photo (Featured Image), optional circular **store logo** badge, name, "Read More" description, **Call Us** and **Get Directions** buttons, phone, address, and a clickable hours panel with a live **Open / Closed** status for the current day.
-- Responsive: on desktop the search box floats in the top-left corner of the map; on mobile it sits above the map full-width.
+- Responsive: on desktop the search box floats in the top-left corner of the map and store details open in an in-map info window; on mobile the search sits above the map and store details open in a **full-screen modal**.
+- Optional **auto-locate**: on load, ask the visitor for their location and glide the map to their area (with a "you are here" marker) so nearby stores are visible.
 - Assets load only on pages where the shortcode/block is present.
 
 > **Live hours require structured data.** The "Open until 8 PM / Closed" status is computed from Google's structured opening hours + timezone, which are captured when you pick a store from the admin search. **Stores added before this feature must be re-searched once** (open the store, search + select it again, update) to populate the live status. Stores with only free-text hours still show the hours, just without the live open/closed badge.
@@ -125,6 +126,7 @@ What Cloudflare does **not** do: it can't cache or limit the server→Google geo
 
 ## Changelog
 
+- **1.10.0** — Auto-locate the visitor on load (optional, in Settings) and glide the map to their area with a "you are here" marker; on mobile, tapping a store now opens a full-screen modal instead of a tiny in-map bubble; refined info-window/card design (more padding, larger type, softer buttons).
 - **1.9.2** — ZIP/postcode search now glides to the result (stepped "fly-in" zoom) instead of an abrupt jump.
 - **1.9.1** — Removed the `editorialSummary` lookup (rarely populated for small businesses and it bumped the admin call to Google's priciest tier); the About field is entered manually. Fixed store names/addresses showing raw HTML entities (e.g. `&#8217;`, `&#8211;`) on the map by decoding them to real characters; the admin also cleans the stored title on the next save.
 - **1.9.0** — Import/Export: download all stores (including photos and logos) as one self-contained JSON file, and re-import it on another site — ideal for staging → production migration. Auto-updates: the plugin now checks GitHub for new versions and shows a normal WordPress "Update available" notice with a one-click "Update Now", plus a "Check for updates" link on the Plugins page.

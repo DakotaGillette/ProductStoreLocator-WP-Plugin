@@ -126,6 +126,8 @@ final class Shortcode {
 			'mapStyleJson'   => (string) Settings::get( 'psl_map_style_json' ),
 			'markerColor'    => (string) Settings::get( 'psl_marker_color' ),
 			'showDirections' => (bool) Settings::get( 'psl_show_directions_link' ),
+			'autoLocate'     => (bool) Settings::get( 'psl_auto_locate' ),
+			'geolocateZoom'  => 10,
 			'stores'         => Plugin::get_stores_for_frontend(),
 			// Server-side geocoding proxy (cached, rate limited, capped).
 			// Public/anonymous endpoint — intentionally no nonce (would break on cached pages).
@@ -152,6 +154,8 @@ final class Shortcode {
 				'open24'       => __( 'Open 24 hours', 'product-store-locator' ),
 				'closedDay'    => __( 'Closed', 'product-store-locator' ),
 				'today'        => __( 'Today', 'product-store-locator' ),
+				'close'        => __( 'Close', 'product-store-locator' ),
+				'youAreHere'   => __( 'You are here', 'product-store-locator' ),
 				'geoError'     => __( 'Location not found. Please try a different ZIP or postcode.', 'product-store-locator' ),
 				'rateLimited'  => __( 'Too many searches. Please wait a moment and try again.', 'product-store-locator' ),
 				'capReached'   => __( 'Search is temporarily unavailable. Please try again later.', 'product-store-locator' ),
