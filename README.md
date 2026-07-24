@@ -14,7 +14,7 @@ A custom WordPress plugin that provides a Google Maps–based store locator for 
 - Import/Export: move all stores (with photos) between sites as one JSON file.
 - Automatic updates via GitHub, using WordPress's native "Update available" flow.
 - **Store Locator Details** metabox with a Google Places search that auto-fills address, coordinates, place ID, phone, and hours — all fields remain editable.
-- Per-store visibility toggles for phone, hours, and about text.
+- Per-store visibility toggles for phone, hours, and about text, plus **global master switches** (Settings → Info Card Fields) to hide the photo, logo, phone, address, hours, or about across every store at once.
 - Frontend `[product_store_locator]` shortcode **and** a matching Gutenberg block (`Store Locator`).
 - Rich map info windows: store photo (Featured Image), optional circular **store logo** badge, name, "Read More" description, **Call Us** and **Get Directions** buttons, phone, address, and a clickable hours panel with a live **Open / Closed** status for the current day.
 - Responsive: on desktop the search box floats in the top-left corner of the map and store details open in an in-map info window; on mobile the search sits above the map and store details open in a **full-screen modal**.
@@ -126,6 +126,7 @@ What Cloudflare does **not** do: it can't cache or limit the server→Google geo
 
 ## Changelog
 
+- **1.11.0** — New "Info Card Fields" settings section: global master switches to hide the photo, logo, phone, address, hours, or about text across every store at once, overriding the per-store toggles.
 - **1.10.5** — With a store card open, scroll-zoom now anchors on that store (pins the marker to its screen position) instead of the cursor, so it zooms straight into the point with no re-adjustment. Other zoom inputs still re-center the card into view.
 - **1.10.4** — Open-store zoom lock now keeps the info card centered/on-screen (the card opens upward, so the marker is placed lower in the viewport) and pans smoothly instead of snapping.
 - **1.10.3** — Fixed the open-store center lock: recenter on `idle` (after the zoom settles) instead of `zoom_changed`, so cursor-anchored scroll zoom no longer drifts the store off-center. Panning still moves freely.

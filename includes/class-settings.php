@@ -113,6 +113,13 @@ final class Settings {
 			'psl_marker_color'       => '#d9433f',
 			'psl_show_directions_link' => 1,
 			'psl_auto_locate'        => 1,
+			// Global master overrides for the info card fields.
+			'psl_global_show_photo'   => 1,
+			'psl_global_show_logo'    => 1,
+			'psl_global_show_phone'   => 1,
+			'psl_global_show_address' => 1,
+			'psl_global_show_hours'   => 1,
+			'psl_global_show_about'   => 1,
 			// Cost / abuse controls.
 			'psl_geocode_server_key'  => '',
 			'psl_rate_limit_per_min'  => 10,
@@ -302,6 +309,40 @@ final class Settings {
 		);
 
 		/*
+		 * Info card field master overrides.
+		 */
+		add_settings_section(
+			'psl_section_fields',
+			__( 'Info Card Fields', 'product-store-locator' ),
+			array( $this, 'section_fields_intro' ),
+			self::PAGE
+		);
+
+		$field_toggles = array(
+			'psl_global_show_photo'   => __( 'Store photo', 'product-store-locator' ),
+			'psl_global_show_logo'    => __( 'Store logo', 'product-store-locator' ),
+			'psl_global_show_phone'   => __( 'Phone number (and the Call Us button)', 'product-store-locator' ),
+			'psl_global_show_address' => __( 'Address', 'product-store-locator' ),
+			'psl_global_show_hours'   => __( 'Hours', 'product-store-locator' ),
+			'psl_global_show_about'   => __( 'About text', 'product-store-locator' ),
+		);
+
+		foreach ( $field_toggles as $key => $title ) {
+			add_settings_field(
+				$key,
+				$title,
+				array( $this, 'field_checkbox' ),
+				self::PAGE,
+				'psl_section_fields',
+				array(
+					'key'   => $key,
+					/* translators: %s: field name. */
+					'label' => sprintf( __( 'Show %s in store popups.', 'product-store-locator' ), $title ),
+				)
+			);
+		}
+
+		/*
 		 * Cost / abuse controls.
 		 */
 		add_settings_section(
@@ -376,6 +417,18 @@ final class Settings {
 				'label' => __( 'Use the CF-Connecting-IP header for per-visitor rate limiting. Enable ONLY if your site is served through Cloudflare and your origin server is locked to Cloudflare IPs (otherwise the header can be spoofed).', 'product-store-locator' ),
 			)
 		);
+	}
+
+	/**
+	 * Intro for the info-card field master overrides.
+	 *
+	 * @return void
+	 */
+	public function section_fields_intro(): void {
+		echo '<p>' . esc_html__(
+			'Master switches for what appears in every store popup. Unchecking one hides that field on all stores, regardless of the per-store setting. (The per-store toggles still apply when a field is enabled here.)',
+			'product-store-locator'
+		) . '</p>';
 	}
 
 	/**
@@ -617,6 +670,11 @@ final class Settings {
 		$clean['psl_show_directions_link'] = ! empty( $input['psl_show_directions_link'] ) ? 1 : 0;
 		$clean['psl_auto_locate']          = ! empty( $input['psl_auto_locate'] ) ? 1 : 0;
 
+		// Info card field master overrides.
+		foreach ( array( 'psl_global_show_photo', 'psl_global_show_logo', 'psl_global_show_phone', 'psl_global_show_address', 'psl_global_show_hours', 'psl_global_show_about' ) as $field_key ) {
+			$clean[ $field_key ] = ! empty( $input[ $field_key ] ) ? 1 : 0;
+		}
+
 		// Cost / abuse controls.
 		$clean['psl_geocode_server_key']  = isset( $input['psl_geocode_server_key'] ) ? sanitize_text_field( $input['psl_geocode_server_key'] ) : '';
 		$clean['psl_rate_limit_per_min']  = isset( $input['psl_rate_limit_per_min'] ) ? max( 0, (int) $input['psl_rate_limit_per_min'] ) : $defaults['psl_rate_limit_per_min'];
@@ -813,6 +871,7 @@ final class Settings {
 				settings_fields( self::GROUP );
 				$this->render_section( 'psl_section_api' );
 				$this->render_section( 'psl_section_map' );
+				$this->render_section( 'psl_section_fields' );
 				?>
 				<details class="psl-accordion">
 					<summary><?php esc_html_e( 'Advanced: Usage & Cost Controls', 'product-store-locator' ); ?></summary>

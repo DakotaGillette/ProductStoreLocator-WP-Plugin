@@ -155,6 +155,15 @@ final class Plugin {
 			)
 		);
 
+		// Global master overrides — when off, the field is hidden on EVERY store
+		// regardless of the per-store toggle. Read once, outside the loop.
+		$g_photo   = (bool) Settings::get( 'psl_global_show_photo' );
+		$g_logo    = (bool) Settings::get( 'psl_global_show_logo' );
+		$g_phone   = (bool) Settings::get( 'psl_global_show_phone' );
+		$g_address = (bool) Settings::get( 'psl_global_show_address' );
+		$g_hours   = (bool) Settings::get( 'psl_global_show_hours' );
+		$g_about   = (bool) Settings::get( 'psl_global_show_about' );
+
 		$stores = array();
 
 		foreach ( $query->posts as $post ) {
@@ -166,9 +175,11 @@ final class Plugin {
 				continue;
 			}
 
-			$show_phone = (bool) get_post_meta( $post->ID, 'store_show_phone', true );
-			$show_hours = (bool) get_post_meta( $post->ID, 'store_show_hours', true );
-			$show_about = (bool) get_post_meta( $post->ID, 'store_show_about', true );
+			// A field shows only if BOTH the global master switch and the
+			// per-store toggle allow it.
+			$show_phone = $g_phone && (bool) get_post_meta( $post->ID, 'store_show_phone', true );
+			$show_hours = $g_hours && (bool) get_post_meta( $post->ID, 'store_show_hours', true );
+			$show_about = $g_about && (bool) get_post_meta( $post->ID, 'store_show_about', true );
 
 			// Structured hours + timezone for live open/closed status.
 			$hours_periods = array();
@@ -182,16 +193,18 @@ final class Plugin {
 				}
 			}
 
-			$photo   = (string) get_the_post_thumbnail_url( $post->ID, 'medium_large' );
+			$photo   = $g_photo ? (string) get_the_post_thumbnail_url( $post->ID, 'medium_large' ) : '';
 			$logo_id = (int) get_post_meta( $post->ID, 'store_logo_id', true );
-			$logo    = $logo_id ? (string) wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+			$logo    = ( $g_logo && $logo_id ) ? (string) wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+
+			$address = $g_address ? self::plain_text( (string) get_post_meta( $post->ID, 'store_address', true ) ) : '';
 
 			$stores[] = array(
 				'id'           => $post->ID,
 				// Decode HTML entities (e.g. &#8217; &#8211;) so the map's JS
 				// textContent shows real characters, not the entity text.
 				'name'         => self::plain_text( get_the_title( $post ) ),
-				'address'      => self::plain_text( (string) get_post_meta( $post->ID, 'store_address', true ) ),
+				'address'      => $address,
 				'lat'          => $lat,
 				'lng'          => $lng,
 				'photo'        => $photo ? $photo : '',
