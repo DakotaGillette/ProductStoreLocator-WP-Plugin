@@ -19,6 +19,7 @@
 	var clusterOverlay = null; // Invisible OverlayView, used only to get pixel projection.
 	var openMarker = null;  // Marker currently anchoring the open info window.
 	var searchBusy = false;
+	var flyInterval = null; // Active "fly to" zoom animation timer, if any.
 
 	/**
 	 * Preset map styles (subset of Google's sample styles).
@@ -703,15 +704,54 @@
 	 * @return {void}
 	 */
 	/**
-	 * Recenter and zoom the map to a coordinate.
+	 * Smoothly "fly" the map to a coordinate: ease the center toward the
+	 * target while stepping the zoom one level at a time, instead of an
+	 * abrupt multi-level jump.
 	 *
 	 * @param {number} lat Latitude.
 	 * @param {number} lng Longitude.
 	 * @return {void}
 	 */
 	function recenterTo( lat, lng ) {
-		map.setCenter( { lat: parseFloat( lat ), lng: parseFloat( lng ) } );
-		map.setZoom( parseInt( data.searchZoom, 10 ) || 12 );
+		var targetZoom = parseInt( data.searchZoom, 10 ) || 12;
+		var target = new google.maps.LatLng( parseFloat( lat ), parseFloat( lng ) );
+
+		// Cancel any animation already in flight (e.g. rapid repeat searches).
+		if ( flyInterval ) {
+			clearInterval( flyInterval );
+			flyInterval = null;
+		}
+
+		var startZoom = map.getZoom();
+		var startCenter = map.getCenter();
+		var steps = Math.abs( targetZoom - startZoom );
+
+		// Same zoom already: just glide over.
+		if ( steps === 0 || ! startCenter ) {
+			map.panTo( target );
+			return;
+		}
+
+		var direction = targetZoom > startZoom ? 1 : -1;
+		var i = 0;
+
+		flyInterval = setInterval( function () {
+			i++;
+			var frac = i / steps;
+			map.setCenter(
+				new google.maps.LatLng(
+					startCenter.lat() + ( target.lat() - startCenter.lat() ) * frac,
+					startCenter.lng() + ( target.lng() - startCenter.lng() ) * frac
+				)
+			);
+			map.setZoom( startZoom + direction * i );
+
+			if ( i >= steps ) {
+				clearInterval( flyInterval );
+				flyInterval = null;
+				map.setCenter( target ); // Settle exactly on the target.
+			}
+		}, 100 );
 	}
 
 	/**

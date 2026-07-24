@@ -125,6 +125,7 @@ What Cloudflare does **not** do: it can't cache or limit the server→Google geo
 
 ## Changelog
 
+- **1.9.2** — ZIP/postcode search now glides to the result (stepped "fly-in" zoom) instead of an abrupt jump.
 - **1.9.1** — Removed the `editorialSummary` lookup (rarely populated for small businesses and it bumped the admin call to Google's priciest tier); the About field is entered manually. Fixed store names/addresses showing raw HTML entities (e.g. `&#8217;`, `&#8211;`) on the map by decoding them to real characters; the admin also cleans the stored title on the next save.
 - **1.9.0** — Import/Export: download all stores (including photos and logos) as one self-contained JSON file, and re-import it on another site — ideal for staging → production migration. Auto-updates: the plugin now checks GitHub for new versions and shows a normal WordPress "Update available" notice with a one-click "Update Now", plus a "Check for updates" link on the Plugins page.
 - **1.8.0** — Visual usage-meter with progress bars on the settings page; API keys masked with a show/hide toggle; cost-control fields tucked into a collapsed "Advanced" accordion; removed the now-redundant default-center lat/lng setting (the map always auto-fits to your stores); clicking a marker now pans it into view so the popup can't run off-screen; map height is capped to fit the viewport; lightweight built-in marker clustering for dense areas (numbered bubbles, no external library).
