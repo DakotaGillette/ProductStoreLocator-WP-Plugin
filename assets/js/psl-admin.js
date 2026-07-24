@@ -315,7 +315,6 @@
 					'internationalPhoneNumber',
 					'regularOpeningHours',
 					'utcOffsetMinutes',
-					'editorialSummary',
 					'photos',
 					'id'
 				]
@@ -355,11 +354,8 @@
 			}
 		}
 
-		// About: pull the Google editorial summary when the field is empty.
-		var aboutEl = byId( 'psl-store-about' );
-		if ( place.editorialSummary && aboutEl && ! aboutEl.value ) {
-			aboutEl.value = place.editorialSummary;
-		}
+		// Note: Google's owner-written business description ("from the business")
+		// is not exposed by the Places API, so About is filled in manually.
 
 		// Store photo URL — imported into the media library on save (once).
 		var photoField = byId( 'psl-store-google-photo' );
@@ -519,6 +515,11 @@
 		var nameInput = byId( 'psl-store-name' );
 		var titleInput = byId( 'title' );
 		if ( nameInput && titleInput ) {
+			// On load, push the cleaned (entity-decoded) name into the hidden
+			// WP title so a re-save persists real characters instead of entities.
+			if ( nameInput.value ) {
+				titleInput.value = nameInput.value;
+			}
 			nameInput.addEventListener( 'input', function () {
 				titleInput.value = nameInput.value;
 			} );

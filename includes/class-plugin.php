@@ -122,6 +122,20 @@ final class Plugin {
 	}
 
 	/**
+	 * Decode HTML entities to real UTF-8 characters for safe use as plain text.
+	 *
+	 * The frontend inserts these strings via JS textContent (never innerHTML),
+	 * so decoding is safe: "America&#8217;s" becomes "America’s" instead of
+	 * displaying the raw entity. Idempotent — plain strings pass through.
+	 *
+	 * @param string $value Possibly entity-encoded string.
+	 * @return string
+	 */
+	public static function plain_text( string $value ): string {
+		return html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	}
+
+	/**
 	 * Build the array of store data used by the frontend map.
 	 *
 	 * Only published stores are included. Fields hidden by the per-store
@@ -174,17 +188,19 @@ final class Plugin {
 
 			$stores[] = array(
 				'id'           => $post->ID,
-				'name'         => get_the_title( $post ),
-				'address'      => (string) get_post_meta( $post->ID, 'store_address', true ),
+				// Decode HTML entities (e.g. &#8217; &#8211;) so the map's JS
+				// textContent shows real characters, not the entity text.
+				'name'         => self::plain_text( get_the_title( $post ) ),
+				'address'      => self::plain_text( (string) get_post_meta( $post->ID, 'store_address', true ) ),
 				'lat'          => $lat,
 				'lng'          => $lng,
 				'photo'        => $photo ? $photo : '',
 				'logo'         => $logo ? $logo : '',
-				'phone'        => $show_phone ? (string) get_post_meta( $post->ID, 'store_phone', true ) : '',
-				'hours'        => $show_hours ? (string) get_post_meta( $post->ID, 'store_hours', true ) : '',
+				'phone'        => $show_phone ? self::plain_text( (string) get_post_meta( $post->ID, 'store_phone', true ) ) : '',
+				'hours'        => $show_hours ? self::plain_text( (string) get_post_meta( $post->ID, 'store_hours', true ) ) : '',
 				'hoursPeriods' => $hours_periods,
 				'utcOffset'    => $show_hours ? (float) get_post_meta( $post->ID, 'store_utc_offset', true ) : 0,
-				'about'        => $show_about ? (string) get_post_meta( $post->ID, 'store_about', true ) : '',
+				'about'        => $show_about ? self::plain_text( (string) get_post_meta( $post->ID, 'store_about', true ) ) : '',
 				'show_phone'   => $show_phone,
 				'show_hours'   => $show_hours,
 				'show_about'   => $show_about,

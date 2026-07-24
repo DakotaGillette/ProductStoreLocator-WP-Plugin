@@ -403,7 +403,7 @@ final class ImportExport {
 			return 'skipped';
 		}
 
-		$title = sanitize_text_field( (string) $store['title'] );
+		$title = sanitize_text_field( Plugin::plain_text( (string) $store['title'] ) );
 		$meta  = is_array( $store['meta'] ?? null ) ? $store['meta'] : array();
 
 		$existing_id = $this->find_existing_store( $title, $meta );

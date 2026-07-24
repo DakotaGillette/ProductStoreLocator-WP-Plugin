@@ -201,7 +201,8 @@ final class Metabox {
 		$logo_url = $logo_id ? (string) wp_get_attachment_image_url( $logo_id, 'thumbnail' ) : '';
 
 		// Store name mirrors the WP post title, which we hide in favor of this field.
-		$store_name = ( 'Auto Draft' === $post->post_title ) ? '' : $post->post_title;
+		// Decode entities so a title stored as "America&#8217;s" shows as "America’s".
+		$store_name = ( 'Auto Draft' === $post->post_title ) ? '' : Plugin::plain_text( $post->post_title );
 
 		$has_key = '' !== (string) Settings::get( 'psl_maps_api_key' );
 		?>
@@ -220,7 +221,7 @@ final class Metabox {
 			<?php endif; ?>
 
 			<p class="psl-intro">
-				<?php esc_html_e( 'Add a store in three quick steps. Search Google first — it fills in the name, address, phone, hours, description and even a store photo automatically. You can edit anything afterward.', 'product-store-locator' ); ?>
+				<?php esc_html_e( 'Add a store in three quick steps. Search Google first — it fills in the name, address, phone, hours and even a store photo automatically. (The About text is entered manually — Google does not share business descriptions.) You can edit anything afterward.', 'product-store-locator' ); ?>
 				<br>
 				<?php esc_html_e( 'A photo from Google is imported as the Featured Image on save (if you haven’t set one). You can always replace it in the sidebar.', 'product-store-locator' ); ?>
 			</p>
