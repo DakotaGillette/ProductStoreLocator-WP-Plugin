@@ -22,6 +22,7 @@
 	var flyInterval = null; // Active "fly to" zoom animation timer, if any.
 	var userMarker = null;  // "You are here" marker from geolocation.
 	var modalEl = null;     // Lazily-built mobile full-screen modal.
+	var lockZoom = 0;       // Zoom level at the previous idle (open-store lock).
 
 	/**
 	 * Preset map styles (subset of Google's sample styles).
@@ -1086,15 +1087,27 @@
 		geocoder = new google.maps.Geocoder();
 		infoWindow = new google.maps.InfoWindow();
 
-		// While a store's info window is open, keep that store centered as the
+		// While a store's info window is open, keep that store centered when the
 		// visitor zooms in/out (a "hard lock"); closing the bubble frees the map.
 		infoWindow.addListener( 'closeclick', function () {
 			openMarker = null;
 		} );
-		map.addListener( 'zoom_changed', function () {
-			if ( openMarker && ! flyInterval ) {
+
+		// We recenter on 'idle' (after the zoom fully settles) rather than
+		// 'zoom_changed', because Google re-anchors scroll-zoom on the cursor
+		// mid-gesture and would override an earlier setCenter. Comparing the
+		// zoom to the previous idle lets us recenter on zoom but not on pan.
+		lockZoom = map.getZoom();
+		map.addListener( 'idle', function () {
+			if ( ! openMarker || flyInterval ) {
+				lockZoom = map.getZoom();
+				return;
+			}
+			var z = map.getZoom();
+			if ( z !== lockZoom ) {
 				map.setCenter( openMarker.getPosition() );
 			}
+			lockZoom = z;
 		} );
 
 		addMarkers();
