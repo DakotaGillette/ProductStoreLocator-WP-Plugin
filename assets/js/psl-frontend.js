@@ -812,6 +812,12 @@
 			flyInterval = null;
 		}
 
+		// Release any open-store center lock so the map can move to the target.
+		if ( openMarker ) {
+			infoWindow.close();
+			openMarker = null;
+		}
+
 		var startZoom = map.getZoom();
 		var startCenter = map.getCenter();
 		var steps = Math.abs( targetZoom - startZoom );
@@ -1065,6 +1071,17 @@
 
 		geocoder = new google.maps.Geocoder();
 		infoWindow = new google.maps.InfoWindow();
+
+		// While a store's info window is open, keep that store centered as the
+		// visitor zooms in/out (a "hard lock"); closing the bubble frees the map.
+		infoWindow.addListener( 'closeclick', function () {
+			openMarker = null;
+		} );
+		map.addListener( 'zoom_changed', function () {
+			if ( openMarker && ! flyInterval ) {
+				map.setCenter( openMarker.getPosition() );
+			}
+		} );
 
 		addMarkers();
 		bindSearch();
