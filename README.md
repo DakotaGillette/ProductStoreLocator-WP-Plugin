@@ -126,6 +126,7 @@ What Cloudflare does **not** do: it can't cache or limit the server→Google geo
 
 ## Changelog
 
+- **1.10.4** — Open-store zoom lock now keeps the info card centered/on-screen (the card opens upward, so the marker is placed lower in the viewport) and pans smoothly instead of snapping.
 - **1.10.3** — Fixed the open-store center lock: recenter on `idle` (after the zoom settles) instead of `zoom_changed`, so cursor-anchored scroll zoom no longer drifts the store off-center. Panning still moves freely.
 - **1.10.2** — Mobile store modal is now an inset, rounded card centered over a darkened backdrop (instead of edge-to-edge full screen), and the hours panel auto-expands on mobile.
 - **1.10.1** — While a store's info window is open, zooming now keeps that store centered ("hard lock"); closing the bubble restores free zoom/pan.

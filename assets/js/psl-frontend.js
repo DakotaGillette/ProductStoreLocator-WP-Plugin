@@ -518,6 +518,46 @@
 	}
 
 	/**
+	 * Smoothly pan so the OPEN store's info card stays fully visible.
+	 *
+	 * The card opens upward from the marker, so centering the marker pushes a
+	 * tall card off the top. Instead we place the marker in the lower part of
+	 * the viewport (by roughly half the card's height) so the card is centred
+	 * and on-screen. Uses panTo for a smooth glide rather than a hard jump.
+	 *
+	 * @return {void}
+	 */
+	function keepStoreInView() {
+		if ( ! openMarker ) {
+			return;
+		}
+
+		var proj = map.getProjection();
+		var mapDiv = map.getDiv();
+		if ( ! proj || ! mapDiv ) {
+			map.panTo( openMarker.getPosition() );
+			return;
+		}
+
+		var h = mapDiv.offsetHeight || 500;
+		var cardEl = mapDiv.querySelector( '.psl-iw' );
+		var cardH = cardEl ? cardEl.offsetHeight : h * 0.5;
+
+		// How far below the viewport centre the marker should sit. Capped so a
+		// very tall card can't push the marker off the bottom.
+		var offsetPx = Math.min( h * 0.4, cardH / 2 + 56 );
+
+		var scale = Math.pow( 2, map.getZoom() );
+		var world = proj.fromLatLngToPoint( openMarker.getPosition() );
+		// Smaller world-y is further north, which moves the marker DOWN on screen.
+		var newCenter = proj.fromPointToLatLng(
+			new google.maps.Point( world.x, world.y - offsetPx / scale )
+		);
+
+		map.panTo( newCenter );
+	}
+
+	/**
 	 * Whether we should use the full-screen modal instead of an info window.
 	 *
 	 * @return {boolean}
@@ -1105,7 +1145,7 @@
 			}
 			var z = map.getZoom();
 			if ( z !== lockZoom ) {
-				map.setCenter( openMarker.getPosition() );
+				keepStoreInView();
 			}
 			lockZoom = z;
 		} );
