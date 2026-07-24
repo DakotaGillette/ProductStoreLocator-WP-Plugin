@@ -439,8 +439,6 @@ final class Metabox {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/media.php';
-		require_once ABSPATH . 'wp-admin/includes/image.php';
 
 		$tmp = download_url( $url, 30 );
 		if ( is_wp_error( $tmp ) ) {
@@ -458,16 +456,8 @@ final class Metabox {
 		);
 		$ext = $ext_map[ $mime ] ?? 'jpg';
 
-		$file_array = array(
-			'name'     => 'store-photo-' . $post_id . '.' . $ext,
-			'tmp_name' => $tmp,
-		);
-
-		$attach_id = media_handle_sideload( $file_array, $post_id, get_the_title( $post_id ) );
+		$attach_id = Plugin::sideload_attachment( $tmp, 'store-photo-' . $post_id . '.' . $ext, $post_id, get_the_title( $post_id ) );
 		if ( is_wp_error( $attach_id ) ) {
-			if ( file_exists( $tmp ) ) {
-				wp_delete_file( $tmp );
-			}
 			return;
 		}
 

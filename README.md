@@ -8,7 +8,11 @@ A custom WordPress plugin that provides a Google Maps–based store locator for 
 ## Features
 
 - Custom post type `store_location` (private, admin UI only) under a top-level **Store Locator** menu.
-- Settings page (Settings API) for the Google Maps API key, default center/zoom, map type, map style (presets + custom JSON), marker color, and a "Get directions" toggle.
+- Settings page (Settings API) for the Google Maps API key (masked, with show/hide), map type, map style (presets + custom JSON), marker color, and a "Get directions" toggle. The map always auto-fits to your stores — no default center to configure.
+- Visual usage meter and collapsed "Advanced" accordion for the cost/rate-limit controls.
+- Lightweight built-in marker clustering for dense areas, and a click-to-center fix so popups never run off-screen.
+- Import/Export: move all stores (with photos) between sites as one JSON file.
+- Automatic updates via GitHub, using WordPress's native "Update available" flow.
 - **Store Locator Details** metabox with a Google Places search that auto-fills address, coordinates, place ID, phone, and hours — all fields remain editable.
 - Per-store visibility toggles for phone, hours, and about text.
 - Frontend `[product_store_locator]` shortcode **and** a matching Gutenberg block (`Store Locator`).
@@ -55,7 +59,10 @@ product-store-locator/
 │   ├── class-settings.php         Admin menu + Settings API page
 │   ├── class-metabox.php          Store details metabox + save logic
 │   ├── class-shortcode.php        Shortcode + frontend asset loading
-│   └── class-block.php            Dynamic Gutenberg block (reuses shortcode)
+│   ├── class-block.php            Dynamic Gutenberg block (reuses shortcode)
+│   ├── class-api-guard.php        Server-side geocode proxy, caching, rate limits, caps
+│   ├── class-import-export.php    Store export/import as a self-contained JSON file
+│   └── class-updater.php          GitHub-backed auto-update checks
 ├── blocks/store-locator/
 │   ├── block.json                 Block metadata
 │   └── editor.js                  No-build editor script
@@ -65,6 +72,23 @@ product-store-locator/
     ├── css/psl-frontend.css       Frontend styles (CSS variables)
     └── css/psl-admin.css          Admin metabox styles
 ```
+
+## Moving stores between sites (Import / Export)
+
+**Store Locator → Import / Export** lets you move stores between sites (e.g. staging → production) as a single JSON file.
+
+- **Export** downloads every store — including its Featured Image and logo, embedded directly in the file (base64) — so the file is fully self-contained and works even if the source site later goes offline.
+- **Import** uploads that file on another (or the same) site. Stores are matched by **Google Place ID** (or, if a store has none, by exact name): a match **updates** that store in place; anything unmatched is **added as new**. Existing stores not present in the file are left alone — import never deletes anything.
+- Re-importing photos/logos adds fresh copies to the Media Library rather than reusing the previous ones (simplest and safest for a one-time migration; if you re-import repeatedly you may want to periodically clean up unused attachments).
+- Both actions require `manage_options` and are nonce-protected.
+
+## Automatic updates
+
+The plugin checks its [GitHub repository](https://github.com/DakotaGillette/ProductStoreLocator-WP-Plugin) for a newer `Version:` header on the `main` branch (cached 12 hours) and, when one is found, shows WordPress's normal **"Update available"** notice on the Plugins page with a one-click **"Update Now"** — no separate update server, no WordPress.org listing required.
+
+- A **"Check for updates"** link sits next to "Settings" on the plugin's Plugins-page row, for an on-demand check that bypasses the cache.
+- Because the repo is public, no credentials are needed for this to work. (No API keys or secrets are ever stored in the plugin's code — only in this site's database — so making the repo public does not expose any secret.)
+- **Release process**: bump `Version:` in `product-store-locator.php` (and the `PSL_VERSION` constant) and push to `main` — the next update check on any site running this plugin will pick it up automatically.
 
 ## Cost controls (avoiding surprise Google bills)
 
@@ -101,6 +125,7 @@ What Cloudflare does **not** do: it can't cache or limit the server→Google geo
 
 ## Changelog
 
+- **1.9.0** — Import/Export: download all stores (including photos and logos) as one self-contained JSON file, and re-import it on another site — ideal for staging → production migration. Auto-updates: the plugin now checks GitHub for new versions and shows a normal WordPress "Update available" notice with a one-click "Update Now", plus a "Check for updates" link on the Plugins page.
 - **1.8.0** — Visual usage-meter with progress bars on the settings page; API keys masked with a show/hide toggle; cost-control fields tucked into a collapsed "Advanced" accordion; removed the now-redundant default-center lat/lng setting (the map always auto-fits to your stores); clicking a marker now pans it into view so the popup can't run off-screen; map height is capped to fit the viewport; lightweight built-in marker clustering for dense areas (numbered bubbles, no external library).
 - **1.7.0** — Auto-import a store photo from Google (once, into the media library); refined info-window design (site font, matching buttons with white icons, polished hours); mouse-wheel zoom without Ctrl; ZIP search recenters/zooms with client-side geocode fallback; default view fits all stores.
 - **1.6.0** — Store name auto-fills from Google (hidden WP title field); About pulls from the Google editorial summary; phone/hours/about visibility default ON for new stores; Save/Publish button at the bottom of the store form.

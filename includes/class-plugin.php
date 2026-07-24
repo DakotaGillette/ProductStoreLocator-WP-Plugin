@@ -54,6 +54,8 @@ final class Plugin {
 		( new Shortcode() )->hooks();
 		( new Block() )->hooks();
 		( new ApiGuard() )->hooks();
+		( new ImportExport() )->hooks();
+		( new Updater() )->hooks();
 
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 	}
@@ -86,6 +88,37 @@ final class Plugin {
 			return (string) filemtime( $file );
 		}
 		return PSL_VERSION;
+	}
+
+	/**
+	 * Sideload a local temp file into the media library.
+	 *
+	 * Shared by the Google-photo auto-import (Metabox) and the JSON
+	 * import/export feature (ImportExport) so both go through one path.
+	 *
+	 * @param string $tmp_path Path to a temp file (e.g. from download_url() or wp_tempnam()).
+	 * @param string $filename Desired filename, including extension.
+	 * @param int    $post_id  Post to attach the media to.
+	 * @param string $title    Attachment title.
+	 * @return int|\WP_Error Attachment ID, or WP_Error on failure.
+	 */
+	public static function sideload_attachment( string $tmp_path, string $filename, int $post_id, string $title = '' ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$file_array = array(
+			'name'     => $filename,
+			'tmp_name' => $tmp_path,
+		);
+
+		$attachment_id = media_handle_sideload( $file_array, $post_id, $title );
+
+		if ( is_wp_error( $attachment_id ) && file_exists( $tmp_path ) ) {
+			wp_delete_file( $tmp_path );
+		}
+
+		return $attachment_id;
 	}
 
 	/**
