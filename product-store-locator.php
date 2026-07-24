@@ -3,7 +3,7 @@
  * Plugin Name:       Product Store Locator
  * Plugin URI:        https://example.com/product-store-locator
  * Description:       A Google Maps–based store locator. Shows all configured stores as map markers, supports ZIP/postcode search to recenter the map, and displays store details in marker info windows (no side list).
- * Version:           1.10.1
+ * Version:           1.10.2
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            Product Store Locator
@@ -22,7 +22,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Plugin constants.
  */
-define( 'PSL_VERSION', '1.10.1' );
+define( 'PSL_VERSION', '1.10.2' );
 define( 'PSL_PLUGIN_FILE', __FILE__ );
 define( 'PSL_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PSL_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

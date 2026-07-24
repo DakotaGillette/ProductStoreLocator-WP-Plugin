@@ -581,7 +581,21 @@
 		var m = ensureModal();
 		var content = m.querySelector( '.psl-modal__content' );
 		content.innerHTML = '';
-		content.appendChild( buildInfoWindow( store ) );
+
+		var card = buildInfoWindow( store );
+		content.appendChild( card );
+
+		// Auto-expand the hours panel on mobile (the toggle still collapses it).
+		var hours = card.querySelector( '.psl-iw__hours' );
+		if ( hours ) {
+			hours.classList.add( 'is-expanded' );
+			var toggle = hours.querySelector( '.psl-iw__hours-toggle' );
+			if ( toggle ) {
+				toggle.setAttribute( 'aria-expanded', 'true' );
+			}
+		}
+
+		content.scrollTop = 0;
 		m.classList.add( 'is-open' );
 		document.body.classList.add( 'psl-modal-open' );
 	}

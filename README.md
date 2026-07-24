@@ -126,6 +126,7 @@ What Cloudflare does **not** do: it can't cache or limit the server→Google geo
 
 ## Changelog
 
+- **1.10.2** — Mobile store modal is now an inset, rounded card centered over a darkened backdrop (instead of edge-to-edge full screen), and the hours panel auto-expands on mobile.
 - **1.10.1** — While a store's info window is open, zooming now keeps that store centered ("hard lock"); closing the bubble restores free zoom/pan.
 - **1.10.0** — Auto-locate the visitor on load (optional, in Settings) and glide the map to their area with a "you are here" marker; on mobile, tapping a store now opens a full-screen modal instead of a tiny in-map bubble; refined info-window/card design (more padding, larger type, softer buttons).
 - **1.9.2** — ZIP/postcode search now glides to the result (stepped "fly-in" zoom) instead of an abrupt jump.

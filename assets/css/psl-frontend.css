@@ -421,39 +421,49 @@ body.psl-modal-open {
 	inset: 0;
 	z-index: 100000;
 	display: none;
+	box-sizing: border-box;
+	/* Gap around the card so the darkened site shows behind it. */
+	padding: 22px 16px;
 }
 
 .psl-modal.is-open {
-	display: block;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .psl-modal__backdrop {
 	position: absolute;
 	inset: 0;
-	background: rgba( 0, 0, 0, 0.5 );
+	background: rgba( 0, 0, 0, 0.55 );
 }
 
 .psl-modal__panel {
-	position: absolute;
-	inset: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 460px;
+	max-height: 100%;
 	background: #fff;
-	overflow-y: auto;
-	-webkit-overflow-scrolling: touch;
-	animation: psl-modal-in 0.22s ease;
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: 0 16px 48px rgba( 0, 0, 0, 0.4 );
+	animation: psl-modal-in 0.2s ease;
 }
 
 @keyframes psl-modal-in {
-	from { transform: translateY( 3% ); opacity: 0; }
+	from { transform: translateY( 12px ); opacity: 0; }
 	to   { transform: translateY( 0 ); opacity: 1; }
 }
 
 .psl-modal__close {
-	position: fixed;
-	top: 14px;
-	right: 14px;
+	position: absolute;
+	top: 12px;
+	right: 12px;
 	z-index: 2;
-	width: 40px;
-	height: 40px;
+	width: 38px;
+	height: 38px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -461,10 +471,17 @@ body.psl-modal-open {
 	border-radius: 50%;
 	background: rgba( 255, 255, 255, 0.92 );
 	color: #1a1d20;
-	font-size: 26px;
+	font-size: 24px;
 	line-height: 1;
 	cursor: pointer;
 	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.28 );
+}
+
+.psl-modal__content {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
 }
 
 /* The store card fills the modal panel edge-to-edge. */
