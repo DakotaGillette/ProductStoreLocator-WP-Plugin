@@ -23,6 +23,7 @@
 	var userMarker = null;  // "You are here" marker from geolocation.
 	var modalEl = null;     // Lazily-built mobile full-screen modal.
 	var lockZoom = 0;       // Zoom level at the previous idle (open-store lock).
+	var wheelZoomAt = 0;    // Timestamp of the last marker-anchored wheel zoom.
 
 	/**
 	 * Preset map styles (subset of Google's sample styles).
@@ -555,6 +556,49 @@
 		);
 
 		map.panTo( newCenter );
+	}
+
+	/**
+	 * Zoom one step while keeping the OPEN store's marker pinned to its current
+	 * screen position (so it zooms "into" that point regardless of the cursor,
+	 * and the card never needs re-adjusting).
+	 *
+	 * @param {number} step +1 to zoom in, -1 to zoom out.
+	 * @return {void}
+	 */
+	function zoomAroundMarker( step ) {
+		var proj = map.getProjection();
+		if ( ! proj || ! openMarker ) {
+			return;
+		}
+
+		var currentZoom = map.getZoom();
+		var newZoom = Math.max( 2, Math.min( 20, currentZoom + step ) );
+		if ( newZoom === currentZoom ) {
+			return;
+		}
+
+		// Move the center toward/away from the marker so the marker's pixel
+		// offset from center is preserved across the zoom (keeps it fixed).
+		var ratio = Math.pow( 2, currentZoom ) / Math.pow( 2, newZoom );
+		var markerWorld = proj.fromLatLngToPoint( openMarker.getPosition() );
+		var centerWorld = proj.fromLatLngToPoint( map.getCenter() );
+		var newCenter = proj.fromPointToLatLng(
+			new google.maps.Point(
+				markerWorld.x + ( centerWorld.x - markerWorld.x ) * ratio,
+				markerWorld.y + ( centerWorld.y - markerWorld.y ) * ratio
+			)
+		);
+
+		wheelZoomAt = Date.now();
+
+		// moveCamera sets zoom + center atomically (no intermediate drift).
+		if ( typeof map.moveCamera === 'function' ) {
+			map.moveCamera( { center: newCenter, zoom: newZoom } );
+		} else {
+			map.setZoom( newZoom );
+			map.setCenter( newCenter );
+		}
 	}
 
 	/**
@@ -1144,11 +1188,32 @@
 				return;
 			}
 			var z = map.getZoom();
-			if ( z !== lockZoom ) {
+			// Skip the reposition if the zoom just came from our marker-anchored
+			// wheel handler (the marker is already pinned). Other zoom inputs
+			// (+/- buttons, double-click) still get re-centered into view.
+			if ( z !== lockZoom && Date.now() - wheelZoomAt > 250 ) {
 				keepStoreInView();
 			}
 			lockZoom = z;
 		} );
+
+		// When a card is open, anchor scroll-zoom on the store itself (not the
+		// cursor) so it zooms straight into that point with no re-adjustment.
+		mapEl.addEventListener(
+			'wheel',
+			function ( e ) {
+				if ( ! openMarker || flyInterval || ! e.deltaY ) {
+					return; // No open card (or no vertical delta): Google handles it.
+				}
+				e.preventDefault();
+				e.stopPropagation();
+				if ( Date.now() - wheelZoomAt < 90 ) {
+					return; // Throttle rapid trackpad deltas.
+				}
+				zoomAroundMarker( e.deltaY < 0 ? 1 : -1 );
+			},
+			{ passive: false, capture: true }
+		);
 
 		addMarkers();
 		bindSearch();
